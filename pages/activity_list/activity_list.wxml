@@ -3,9 +3,8 @@
   <view class="activity-list">
     <block wx:for="{{activities}}" wx:key="index">
       <view class="list-item">
-        <view class="content" bindtap="navigateToActivity" data-index="{{index}}">
-          <text class="name">{{item.activityTitle}}</text>
-          <text class="count">{{item.completedCount}}/{{item.deletedCount}}/{{item.activityItems.length}}</text>
+        <view class="content" bindtap="navigateToActivity" data-index="{{index}}" data-id="{{item.id}}">
+          <text class="name">{{item.activity_title}}</text>
         </view>
         <view class="action">
           <button class="delete-btn" bindtap="deleteActivity" data-index="{{index}}">删除</button>

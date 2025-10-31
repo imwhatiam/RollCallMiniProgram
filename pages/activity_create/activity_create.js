@@ -60,7 +60,7 @@ Page({
         console.log('createNewActivityOnServer success', res);
         const activityID = res.data.id;
         wx.navigateTo({
-          url: `/pages/activity_detail/activity_detail?index=` + activityID
+          url: `/pages/activity_detail/activity_detail?activityID=` + activityID
         });
       },
       fail: (err) => {

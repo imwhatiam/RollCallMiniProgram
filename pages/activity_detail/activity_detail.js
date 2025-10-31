@@ -1,3 +1,4 @@
+import { API } from '../../config';
 Page({
 
   onShareTimeline: function () {
@@ -8,12 +9,13 @@ Page({
   onShareAppMessage: function () {
     return {
       title: '活动点名/待办事项',
-      path: '/pages/activity_list/activity_list'
+      path: `/pages/activity_detail/activity_detail?activityID=` + this.data.activityID
     };
   },
 
   data: {
-    index: '',
+    openid: wx.getStorageSync('openid'),
+    activityID: '',
     activityTitle: '',
     activityItems: [],
     isEditingActivityTitle: false,
@@ -23,28 +25,38 @@ Page({
 
   onLoad(options) {
     wx.showLoading({ title: '加载中...' });
-    if (options.index !== undefined) {
-      this.loadActivity(parseInt(options.index));
+    if (options.activityID !== undefined) {
+      this.getActivityFromServer(parseInt(options.activityID));
     } else {
       wx.hideLoading();
-      wx.showToast({ title: 'index invalid', icon: 'none' });
+      wx.showToast({ title: 'activityID invalid', icon: 'none' });
     }
   },
 
-  loadActivity(index) {
-    const activities = wx.getStorageSync('activities');
-    const activity = activities[index];
-
-    this.setData({
-      index,
-      activityTitle: activity.activityTitle,
-      activityItems: activity.activityItems,
-      isEditingActivityTitle: false
-    }, () => {
-      wx.nextTick(() => {
-        wx.hideLoading();
-      });
-    });
+  getActivityFromServer(activityID) {
+    wx.request({
+      url: API.getActivity(activityID),
+      method: 'GET',
+      data: {
+        activity_id: activityID
+      },
+      success: (res) => {
+        console.log('getActivityFromServer success', res);
+        this.setData({
+          activityID,
+          activityTitle: res.data.activity_title,
+          activityItems: res.data.activity_items,
+          isEditingActivityTitle: false
+        }, () => {
+          wx.nextTick(() => {
+            wx.hideLoading();
+          });
+        });
+      },
+      fail: (err) => {
+        console.log('getActivityFromServer failed', err);
+      }
+    })
   },
 
   startEditingActivityTitle() {
@@ -56,47 +68,85 @@ Page({
   },
 
   saveActivityTitle() {
-    const { activityTitle, index } = this.data;
+    const { activityTitle, activityID } = this.data;
     if (!activityTitle.trim()) {
       wx.showToast({ title: '活动/事项名称不能为空', icon: 'none' });
       return;
     }
-
-    const activities = wx.getStorageSync('activities');
-    activities[index].activityTitle = activityTitle.trim();
-    wx.setStorageSync('activities', activities);
-
     this.setData({ isEditingActivityTitle: false });
+    this.updateActivityTitle(activityID, activityTitle);
+  },
+
+  updateActivityTitle(activityID, activityTitle) {
+    wx.request({
+      url: API.updateActivity(activityID),
+      method: 'PUT',
+      data: {
+        weixin_id: wx.getStorageSync('openid'),
+        activity_title: activityTitle
+      },
+      success: (res) => {
+        console.log('updateActivityTitle success', res);
+      },
+      fail: (err) => {
+        console.log('updateActivityTitle failed', err);
+      }
+    })
   },
 
   showFullText(e) {
     const index = e.currentTarget.dataset.index;
     this.setData({showFullTextIndex: index});
   },
+
   hideFullText() {
     this.setData({showFullTextIndex: ''});
   },
 
   handleCompleteItem(e) {
-    const index = e.currentTarget.dataset.index;
-    const key = `activityItems[${index}].completed`;
-    this.setData({
-      [key]: !this.data.activityItems[index].completed
-    });
-    this.saveChanges();
+    const { activityID } = this.data;
+    const itemID = e.currentTarget.dataset.index;
+    this.updateActivityItem(activityID, itemID, 'completed');
+  },
+
+  handleUncompleteItem(e) {
+    const { activityID } = this.data;
+    const itemID = e.currentTarget.dataset.index;
+    this.updateActivityItem(activityID, itemID, '');
   },
 
   handleDeleteItem(e) {
-    const index = e.currentTarget.dataset.index;
-    const key = `activityItems[${index}].deleted`;
-    this.setData({
-      [key]: !this.data.activityItems[index].deleted
-    });
-    this.saveChanges();
+    const { activityID } = this.data;
+    const itemID = e.currentTarget.dataset.index;
+    this.updateActivityItem(activityID, itemID, 'deleted');
+  },
+
+  handleUndeleteItem(e) {
+    const { activityID } = this.data;
+    const itemID = e.currentTarget.dataset.index;
+    this.updateActivityItem(activityID, itemID, '');
+  },
+
+  updateActivityItem(activityID, itemID, itemStatus) {
+    wx.request({
+      url: API.updateActivityItem(activityID, itemID),
+      method: 'PUT',
+      data: {
+        weixin_id: wx.getStorageSync('openid'),
+        activity_item_status: itemStatus
+      },
+      success: (res) => {
+        console.log('updateActivityItem success', res);
+        this.setData({ activityItems: res.data.activity_items });
+      },
+      fail: (err) => {
+        console.log('updateActivityItem failed', err);
+      }
+    })
   },
 
   handleDeleteItemCompletely(e) {
-    const index = e.currentTarget.dataset.index;
+    const activityID = e.currentTarget.dataset.activityID;
     const itemName= e.currentTarget.dataset.name;
     wx.showModal({
       title: '确认删除',
@@ -104,9 +154,8 @@ Page({
       success: res => {
         if (res.confirm) {
           const activityItems = this.data.activityItems;
-          activityItems.splice(index, 1);
+          activityItems.splice(activityID, 1);
           this.setData({ activityItems });
-          this.saveChanges();
         }
       }
     });
@@ -133,8 +182,6 @@ Page({
         activityItems: activityItems,
         newItemName: ''
       });
-
-      this.saveChanges();
     }
     setTimeout(() => {
       wx.pageScrollTo({
@@ -142,12 +189,5 @@ Page({
         duration: 300
       });
     }, 100);
-  },
-
-  saveChanges() {
-    const activities = wx.getStorageSync('activities');
-    const currentActivity = activities[this.data.index];
-    currentActivity.activityItems = this.data.activityItems;
-    wx.setStorageSync('activities', activities);
   },
 });
