@@ -37,40 +37,31 @@ Page({
       return;
     }
 
-    const items = activityItems.map(itemName => ({
-      itemName: itemName,
-      complete: false,
-      deleted: false,
-    }))
+    if (!activityItems.length) {
+      wx.showToast({ title: '请输入待办事项', icon: 'none' });
+      return;
+    }
 
-    const newActivity = {
-      activityTitle: activityTitle,
-      activityItems: items,
-    };
-
-    const activities = wx.getStorageSync('activities') || [];
-    activities.unshift(newActivity);
-
-    this.createNewActivityOnServer(newActivity)
-    wx.setStorageSync('activities', activities);
-    wx.navigateTo({
-      url: `/pages/activity_detail/activity_detail?index=0`
-    });
+    this.createNewActivityOnServer(activityTitle, activityItems);
   },
 
-  createNewActivityOnServer(newActivity) {
+  createNewActivityOnServer(activityTitle, activityItems) {
     wx.request({
       url: API.createNewActivity,
       method: 'POST',
       data: {
         creator_weixin_id: wx.getStorageSync('openid'),
         creator_weixin_name: wx.getStorageSync('userInfo').nickName,
-        activity_title: newActivity.activityTitle,
-        activity_items: newActivity.activityItems.map(item => item.itemName),
+        activity_title: activityTitle,
+        activity_items: activityItems,
         white_list: [wx.getStorageSync('openid')],
       },
       success: (res) => {
         console.log('createNewActivityOnServer success', res);
+        const activityID = res.data.id;
+        wx.navigateTo({
+          url: `/pages/activity_detail/activity_detail?index=` + activityID
+        });
       },
       fail: (err) => {
         console.log('createNewActivityOnServer failed', err);

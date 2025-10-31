@@ -1,3 +1,4 @@
+import { API } from '../../config';
 Page({
 
   onShareTimeline: function () {
@@ -17,10 +18,42 @@ Page({
   },
 
   onShow() {
-    this.loadActivities()
+    this.getActivitiesFromServer()
   },
 
-  loadActivities() {
+  getActivitiesFromServer() {
+    wx.request({
+      url: API.getActivities(wx.getStorageSync('openid')),
+      method: 'GET',
+      success: (res) => {
+        console.log('getActivitiesFromServer success', res);
+      },
+      fail: (err) => {
+        console.log('getActivitiesFromServer failed', err);
+        wx.showToast({ title: '从服务器获取数据失败, 改为从缓存获取', icon: 'none' });
+        this.loadActivitiesFromCache()
+      }
+    });
+  },
+
+  deleteActivityFromServer(activityTitle) {
+    wx.request({
+      url: API.deleteActivity,
+      method: 'DELETE',
+      data: {
+        creator_weixin_id: wx.getStorageSync('openid'),
+        activity_title: activityTitle,
+      },
+      success: (res) => {
+        console.log('deleteActivityFromServer success', res);
+      },
+      fail: (err) => {
+        console.log('deleteActivityFromServer failed', err);
+      }
+    });
+  },
+
+  loadActivitiesFromCache() {
     const activities = wx.getStorageSync('activities') || []
     const result = activities.map(activity => {
       const deletedCount = activity.activityItems.reduce((count, subItem) => {
@@ -64,7 +97,7 @@ Page({
         if (res.confirm) {
           activities.splice(index, 1)
           wx.setStorageSync('activities', activities)
-          this.loadActivities()
+          this.loadActivitiesFromCache()
           wx.showToast({ title: '删除成功', icon: 'success' })
         }
       }
