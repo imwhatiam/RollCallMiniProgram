@@ -1,3 +1,4 @@
+import { API } from '../../config';
 Page({
 
   onShareTimeline: function () {
@@ -50,9 +51,30 @@ Page({
     const activities = wx.getStorageSync('activities') || [];
     activities.unshift(newActivity);
 
+    this.createNewActivityOnServer(newActivity)
     wx.setStorageSync('activities', activities);
     wx.navigateTo({
       url: `/pages/activity_detail/activity_detail?index=0`
+    });
+  },
+
+  createNewActivityOnServer(newActivity) {
+    wx.request({
+      url: API.createNewActivity,
+      method: 'POST',
+      data: {
+        creator_weixin_id: wx.getStorageSync('openid'),
+        creator_weixin_name: wx.getStorageSync('userInfo').nickName,
+        activity_title: newActivity.activityTitle,
+        activity_items: newActivity.activityItems.map(item => item.itemName),
+        white_list: [wx.getStorageSync('openid')],
+      },
+      success: (res) => {
+        console.log('createNewActivityOnServer success', res);
+      },
+      fail: (err) => {
+        console.log('createNewActivityOnServer failed', err);
+      }
     });
   },
 });

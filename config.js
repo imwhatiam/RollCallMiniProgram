@@ -4,4 +4,5 @@ const API_BASE = 'https://www.lian-yolo.com/weixin-miniprogram/api';
 export const API = {
   domain: DOMAIN,
   saveWeixinUserInfo: `${API_BASE}/jscode2session/`,
+  createNewActivity: `${API_BASE}/activities/`,
 };

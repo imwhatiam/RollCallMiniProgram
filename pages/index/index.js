@@ -65,6 +65,8 @@ Page({
         avatar_url: userInfo.avatarUrl,
       },
       success: (res) => {
+        const openid = res.data.data.openid;
+        wx.setStorageSync('openid', openid);
         console.log('saveUserInfoToServer success', res);
       },
       fail: (err) => {
