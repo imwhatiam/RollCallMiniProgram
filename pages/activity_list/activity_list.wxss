@@ -1,0 +1,74 @@
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.activity-list {
+  margin: 20px 0;
+  margin-bottom: 130px;
+}
+
+.list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 300px; /* 固定宽度 */
+  padding: 12px;
+  margin: 10px auto; /* 居中显示 */
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+}
+
+.count {
+  color: #666;
+  margin-right: 20px;
+}
+
+.delete-btn {
+  background: #F44336;
+  color: white;
+  font-size: 14px;
+  line-height: 1.4;
+  padding: 6px 12px;
+  border-radius: 4px;
+}
+
+.bottom-view {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+}
+
+.create-save-update-btn {
+  background: #4CAF50;
+  color: white;
+  margin: 20px;
+  border-radius: 8px;
+  width: 80px;
+}
+
+button {
+  transition: all 0.2s ease;
+  transform: translateZ(0);
+}
+
+button:active {
+  transform: scale(0.96);
+  opacity: 0.9;
+}

@@ -1,15 +1,17 @@
 {
   "pages": [
     "pages/index/index",
-    "pages/logs/logs"
+    "pages/activity_list/activity_list",
+    "pages/activity_create/activity_create",
+    "pages/activity_detail/activity_detail"
   ],
-  "window": {
-    "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "Weixin",
-    "navigationBarBackgroundColor": "#ffffff"
+  "usingComponents": {
+    "home-button": "/components/home-button/home-button"
   },
-  "style": "v2",
-  "componentFramework": "glass-easel",
-  "sitemapLocation": "sitemap.json",
-  "lazyCodeLoading": "requiredComponents"
+  "window": {
+    "homeButton": true,
+    "navigationBarTitleText": "Yolo户外助手",
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTextStyle": "black"
+  }
 }

@@ -1,0 +1,3 @@
+<view class="home-btn" bindtap="goHome">
+  <image src="/images/home-icon.svg" class="icon"></image>
+</view>

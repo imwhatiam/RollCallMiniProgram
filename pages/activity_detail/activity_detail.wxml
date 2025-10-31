@@ -1,0 +1,48 @@
+<home-button />
+<view class="container">
+  <view class="header">
+    <block wx:if="{{isEditingActivityName}}">
+      <input class="name-input"
+            value="{{activityName}}"
+            bindinput="handleActivityNameInput"
+            bindblur="saveActivityName"
+            focus="{{isEditingActivityName}}" />
+    </block>
+    <block wx:else>
+      <view class="name-display" bindtap="startEditingActivityName">
+        {{activityName || '点击输入名称'}}
+      </view>
+    </block>
+  </view>
+
+  <view class="activity-list-item">
+    <block wx:for="{{activityItems}}" wx:key="index">
+      <view wx:if="{{item.completed}}" class="list-item completed">
+        <button class="complete-btn" bindtap="handleCompleteItem" data-index="{{index}}">✓</button>
+        <text class="item-text">{{index+1}}, {{item.itemName}}</text>
+      </view>
+      <view wx:elif="{{item.deleted}}" class="list-item deleted">
+        <text class="item-text">{{index+1}}, {{item.itemName}}</text>
+        <button class="delete-btn" bindtap="handleDeleteItem" data-index="{{index}}">x</button>
+        <button class="delete-btn" bindtap="handleDeleteItemCompletely" data-index="{{index}}" data-name="{{item.itemName}}">彻底删除</button>
+      </view>
+      <view wx:else class="list-item">
+        <button class="complete-btn" bindtap="handleCompleteItem" data-index="{{index}}">完成</button>
+        <text class="{{showFullTextIndex===index ? 'item-full-text' : 'item-text'}}" bindlongpress="showFullText" bindtouchend="hideFullText" data-index="{{index}}">{{index+1}}, {{item.itemName}}</text>
+        <block wx:if="{{showFullTextIndex!==index}}">
+          <button class="delete-btn" bindtap="handleDeleteItem" data-index="{{index}}">删除</button>
+        </block>
+      </view>
+    </block>
+  </view>
+
+  <view class="bottom-view">
+    <input
+      type="text"
+      placeholder="请输入新人员/子事项"
+      bindinput="handleNewItemInput"
+      value="{{newItemName}}"
+    />
+    <button class="create-save-update-btn" bindtap="addNewItem">添加</button>
+  </view>
+</view>

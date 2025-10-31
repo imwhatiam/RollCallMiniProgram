@@ -1,0 +1,11 @@
+.home-btn {
+  position: fixed;
+  z-index: 9999;
+  top: 10px;
+  left: 10px;
+  border-radius: 50%;
+}
+.icon {
+  width: 70rpx;
+  height: 70rpx;
+}

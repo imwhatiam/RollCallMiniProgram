@@ -1,3 +1,4 @@
+import { API } from '../../config';
 Page({
   data: {
     userInfo: {},
@@ -11,7 +12,15 @@ Page({
         userInfo: cachedUserInfo,
         hasUserInfo: true
       });
+      this.navigateToActivityList();
     }
+  },
+
+  navigateToActivityList() {
+    console.log('nav to activity list')
+    wx.navigateTo({
+      url: `/pages/activity_list/activity_list`
+    })
   },
 
   getUserProfile(e) {
@@ -30,6 +39,7 @@ Page({
           success: (res) => {
             if (res.code) {
               this.saveUserInfoToServer(res.code, userInfo);
+              this.navigateToActivityList();
             } else {
               console.log('no code from wx.login', res);
             }
@@ -47,7 +57,7 @@ Page({
 
   saveUserInfoToServer(jscode, userInfo) {
     wx.request({
-      url: 'https://www.lian-yolo.com/weixin-miniprogram/api/jscode2session/',
+      url: API.saveWeixinUserInfo,
       method: 'POST',
       data: {
         code: jscode,

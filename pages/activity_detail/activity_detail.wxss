@@ -1,0 +1,152 @@
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding-bottom: 20px;
+  transition: all 0.3s ease;
+}
+
+.name-input {
+  color: #333;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.name-display {
+  color: #333;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-align: center;
+  padding: 0;
+  margin: 0;
+  line-height: 22px;
+}
+
+.activity-list-item {
+  margin: 20px 0;
+  margin-bottom: 130px;
+}
+
+.list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 300px;
+  padding: 12px;
+  margin: 10px auto;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease;
+}
+
+.list-item.completed {
+  background: #8FBC8F;
+}
+
+.list-item.deleted {
+  background: #F08080;
+}
+
+.list-item.completed .item-text {
+  color: #4CAF50;
+  text-decoration: line-through;
+}
+
+.list-item.deleted .item-text {
+  color: #af4c4c;
+  text-decoration: line-through;
+}
+
+.item-text {
+  flex: 1;
+  margin: 0 15px;
+  font-size: 18px;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item-full-text {
+  flex: 1;
+  margin: 0 15px;
+  font-size: 18px;
+  text-align: left;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.complete-btn {
+  background: #4CAF50;
+  color: white;
+  font-size: 14px;
+  line-height: 1.4;
+  padding: 6px 12px;
+  border-radius: 4px;
+}
+
+.delete-btn {
+  background: #F44336;
+  color: white;
+  font-size: 14px;
+  line-height: 1.4;
+  padding: 6px 12px;
+  border-radius: 4px;
+}
+
+.bottom-view {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+}
+
+.create-save-update-btn {
+  background: #4CAF50;
+  color: white;
+  margin: 20px;
+  border-radius: 8px;
+  width: 80px;
+}
+
+.bottom-view input {
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 15px;
+  margin-top: 20px;
+  margin-left: 20px;
+  transition: border-color 0.3s ease;
+  text-align: center;
+  width: 200px;
+}
+
+.bottom-view input:focus {
+  border-color: #4CAF50;
+}
+
+button {
+  transition: all 0.2s ease;
+  transform: translateZ(0);
+}
+
+button:active {
+  transform: scale(0.96);
+  opacity: 0.9;
+}
