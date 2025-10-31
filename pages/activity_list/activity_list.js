@@ -56,7 +56,7 @@ Page({
   deleteActivity(e) {
     const activities = wx.getStorageSync('activities')
     const index = e.currentTarget.dataset.index
-    const name = activities[index].activityName
+    const name = activities[index].activityTitle
     wx.showModal({
       title: '确认删除',
       content: '确定要删除 ' + name + ' 吗？',

@@ -1,16 +1,16 @@
 <home-button />
 <view class="container">
   <view class="header">
-    <block wx:if="{{isEditingActivityName}}">
+    <block wx:if="{{isEditingActivityTitle}}">
       <input class="name-input"
-            value="{{activityName}}"
-            bindinput="handleActivityNameInput"
-            bindblur="saveActivityName"
-            focus="{{isEditingActivityName}}" />
+            value="{{activityTitle}}"
+            bindinput="handleActivityTitleInput"
+            bindblur="saveActivityTitle"
+            focus="{{isEditingActivityTitle}}" />
     </block>
     <block wx:else>
-      <view class="name-display" bindtap="startEditingActivityName">
-        {{activityName || '点击输入名称'}}
+      <view class="name-display" bindtap="startEditingActivityTitle">
+        {{activityTitle || '点击输入名称'}}
       </view>
     </block>
   </view>

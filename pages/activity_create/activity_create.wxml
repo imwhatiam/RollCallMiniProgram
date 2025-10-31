@@ -3,8 +3,8 @@
   <view class="input-group">
     <input class="name-input"
             placeholder="活动/事项名称"
-            value="{{activityName}}"
-            bindinput="handleActivityNameInput"/>
+            value="{{activityTitle}}"
+            bindinput="handleActivityTitleInput"/>
   </view>
   <view class="input-group">
     <textarea class="items-input"

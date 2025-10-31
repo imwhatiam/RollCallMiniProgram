@@ -4,7 +4,7 @@
     <block wx:for="{{activities}}" wx:key="index">
       <view class="list-item">
         <view class="content" bindtap="navigateToActivity" data-index="{{index}}">
-          <text class="name">{{item.activityName}}</text>
+          <text class="name">{{item.activityTitle}}</text>
           <text class="count">{{item.completedCount}}/{{item.deletedCount}}/{{item.activityItems.length}}</text>
         </view>
         <view class="action">

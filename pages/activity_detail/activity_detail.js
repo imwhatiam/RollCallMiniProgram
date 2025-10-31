@@ -14,9 +14,9 @@ Page({
 
   data: {
     index: '',
-    activityName: '',
+    activityTitle: '',
     activityItems: [],
-    isEditingActivityName: false,
+    isEditingActivityTitle: false,
     newItemName: '',
     showFullTextIndex: ''
   },
@@ -37,9 +37,9 @@ Page({
 
     this.setData({
       index,
-      activityName: activity.activityName,
+      activityTitle: activity.activityTitle,
       activityItems: activity.activityItems,
-      isEditingActivityName: false
+      isEditingActivityTitle: false
     }, () => {
       wx.nextTick(() => {
         wx.hideLoading();
@@ -47,26 +47,26 @@ Page({
     });
   },
 
-  startEditingActivityName() {
-    this.setData({ isEditingActivityName: true });
+  startEditingActivityTitle() {
+    this.setData({ isEditingActivityTitle: true });
   },
 
-  handleActivityNameInput(e) {
-    this.setData({ activityName: e.detail.value });
+  handleActivityTitleInput(e) {
+    this.setData({ activityTitle: e.detail.value });
   },
 
-  saveActivityName() {
-    const { activityName, index } = this.data;
-    if (!activityName.trim()) {
+  saveActivityTitle() {
+    const { activityTitle, index } = this.data;
+    if (!activityTitle.trim()) {
       wx.showToast({ title: '活动/事项名称不能为空', icon: 'none' });
       return;
     }
 
     const activities = wx.getStorageSync('activities');
-    activities[index].activityName = activityName.trim();
+    activities[index].activityTitle = activityTitle.trim();
     wx.setStorageSync('activities', activities);
 
-    this.setData({ isEditingActivityName: false });
+    this.setData({ isEditingActivityTitle: false });
   },
 
   showFullText(e) {

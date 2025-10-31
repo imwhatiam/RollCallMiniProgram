@@ -14,12 +14,12 @@ Page({
   },
 
   data: {
-    activityName: '',
+    activityTitle: '',
     activityItems: [],
   },
 
-  handleActivityNameInput(e) {
-    this.setData({ activityName: e.detail.value.trim() });
+  handleActivityTitleInput(e) {
+    this.setData({ activityTitle: e.detail.value.trim() });
   },
 
   handleActivityItemsInput(e) {
@@ -30,8 +30,8 @@ Page({
   },
 
   saveActivity() {
-    const { activityName, activityItems } = this.data;
-    if (!activityName) {
+    const { activityTitle, activityItems } = this.data;
+    if (!activityTitle) {
       wx.showToast({ title: '请输入活动/事项名称', icon: 'none' });
       return;
     }
@@ -43,7 +43,7 @@ Page({
     }))
 
     const newActivity = {
-      activityName: activityName,
+      activityTitle: activityTitle,
       activityItems: items,
     };
 
