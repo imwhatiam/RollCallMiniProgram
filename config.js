@@ -4,10 +4,14 @@ const API_BASE = 'https://www.lian-yolo.com/weixin-miniprogram/api';
 export const API = {
   domain: DOMAIN,
   saveWeixinUserInfo: `${API_BASE}/jscode2session/`,
+
   createNewActivity: `${API_BASE}/activities/`,
   getActivities: (weixin_id) => `${API_BASE}/activities/?weixin_id=${weixin_id}`,
   getActivity: (activityID) => `${API_BASE}/activities/${activityID}/`,
   updateActivity: (activityID) => `${API_BASE}/activities/${activityID}/`,
-  updateActivityItem: (activityID, itemID) => `${API_BASE}/activities/${activityID}/items/${itemID}/`,
   deleteActivity: (activityID) => `${API_BASE}/activities/${activityID}/`,
+
+  addActivityItem: (activityID) => `${API_BASE}/activities/${activityID}/items/`,
+  updateActivityItem: (activityID, itemID) => `${API_BASE}/activities/${activityID}/items/${itemID}/`,
+  deleteActivityItem: (activityID, itemID) => `${API_BASE}/activities/${activityID}/items/${itemID}/`,
 };

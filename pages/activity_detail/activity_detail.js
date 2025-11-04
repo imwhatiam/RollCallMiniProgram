@@ -146,19 +146,34 @@ Page({
   },
 
   handleDeleteItemCompletely(e) {
-    const activityID = e.currentTarget.dataset.activityID;
+    const itemID = e.currentTarget.dataset.index;
     const itemName= e.currentTarget.dataset.name;
     wx.showModal({
       title: '确认删除',
       content: '确定要删除 ' + itemName + ' 吗？',
       success: res => {
         if (res.confirm) {
-          const activityItems = this.data.activityItems;
-          activityItems.splice(activityID, 1);
-          this.setData({ activityItems });
+          this.deleteActivityItem(this.data.activityID, itemID);
         }
       }
     });
+  },
+
+  deleteActivityItem(activityID, itemID) {
+    wx.request({
+      url: API.deleteActivityItem(activityID, itemID),
+      method: 'DELETE',
+      data: {
+        weixin_id: wx.getStorageSync('openid'),
+      },
+      success: (res) => {
+        console.log('deleteActivityItem success', res);
+        this.setData({ activityItems: res.data.activity_items });
+      },
+      fail: (err) => {
+        console.log('deleteActivityItem failed', err);
+      }
+    })
   },
 
   handleNewItemInput(e) {
@@ -168,26 +183,38 @@ Page({
   },
 
   addNewItem() {
-    const activityItems = this.data.activityItems;
     const newItemName = this.data.newItemName;
 
-    if (newItemName !== '') {
-      activityItems.push({
-        itemName: newItemName,
-        completed: false,
-        deleted: false
-      });
-
-      this.setData({
-        activityItems: activityItems,
-        newItemName: ''
-      });
+    if (newItemName === '') {
+      wx.showToast({ title: '请输入待办事项名称', icon: 'none' });
+      return;
     }
+
+    this.addActivityItem(this.data.activityID, newItemName);
+
     setTimeout(() => {
       wx.pageScrollTo({
         scrollTop: 9999,
         duration: 300
       });
     }, 100);
+  },
+
+  addActivityItem(activityID, newItemName) {
+    wx.request({
+      url: API.addActivityItem(activityID),
+      method: 'POST',
+      data: {
+        weixin_id: wx.getStorageSync('openid'),
+        activity_item_name: newItemName
+      },
+      success: (res) => {
+        console.log('addActivityItem success', res);
+        this.setData({ activityItems: res.data.activity_items });
+      },
+      fail: (err) => {
+        console.log('addActivityItem failed', err);
+      }
+    })
   },
 });
