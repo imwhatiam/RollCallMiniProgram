@@ -1,4 +1,24 @@
 import { API } from '../../config';
+
+// 通用请求封装：自动显示/隐藏加载中提示
+function requestWithLoading(options) {
+  wx.showLoading({ title: '加载中...' });
+  return new Promise((resolve, reject) => {
+    wx.request({
+      ...options,
+      success(res) {
+        resolve(res);
+      },
+      fail(err) {
+        reject(err);
+      },
+      complete() {
+        wx.hideLoading();
+      }
+    });
+  });
+}
+
 Page({
 
   onShareTimeline: function () {
@@ -20,43 +40,60 @@ Page({
     activityItems: [],
     isEditingActivityTitle: false,
     newItemName: '',
-    showFullTextIndex: ''
+    showFullTextIndex: '',
+
+    totalCount: 0,
+    checkedCount: 0,
+    deletedCount: 0,
   },
 
   onLoad(options) {
-    wx.showLoading({ title: '加载中...' });
     if (options.activityID !== undefined) {
       this.getActivityFromServer(parseInt(options.activityID));
     } else {
-      wx.hideLoading();
       wx.showToast({ title: 'activityID invalid', icon: 'none' });
     }
   },
 
-  getActivityFromServer(activityID) {
-    wx.request({
-      url: API.getActivity(activityID),
-      method: 'GET',
-      data: {
-        activity_id: activityID
-      },
-      success: (res) => {
-        console.log('getActivityFromServer success', res);
-        this.setData({
-          activityID,
-          activityTitle: res.data.activity_title,
-          activityItems: res.data.activity_items,
-          isEditingActivityTitle: false
-        }, () => {
-          wx.nextTick(() => {
-            wx.hideLoading();
-          });
-        });
-      },
-      fail: (err) => {
-        console.log('getActivityFromServer failed', err);
-      }
-    })
+  async getActivityFromServer(activityID) {
+    try {
+      const res = await requestWithLoading({
+        url: API.getActivity(activityID),
+        method: 'GET',
+        data: { activity_id: activityID }
+      });
+
+      console.log('getActivityFromServer success', res);
+      this.setData({
+        activityID,
+        activityTitle: res.data.activity_title,
+        activityItems: res.data.activity_items,
+        isEditingActivityTitle: false
+      }, () => {
+        this.calculateStats();
+      });
+    } catch (err) {
+      console.log('getActivityFromServer failed', err);
+      wx.showToast({ title: '加载失败', icon: 'none' });
+    }
+  },
+
+  calculateStats() {
+    const items = this.data.activityItems || [];
+    const itemArray = Object.values(items);
+    const totalCount = itemArray.length;
+    const checkedCount = itemArray.filter(item => item.status === 'completed').length;
+    const deletedCount = itemArray.filter(item => item.status === 'deleted').length;
+
+    this.setData({
+      totalCount,
+      checkedCount,
+      deletedCount
+    });
+  },
+
+  refreshData() {
+    this.getActivityFromServer(this.data.activityID);
   },
 
   startEditingActivityTitle() {
@@ -77,30 +114,29 @@ Page({
     this.updateActivityTitle(activityID, activityTitle);
   },
 
-  updateActivityTitle(activityID, activityTitle) {
-    wx.request({
-      url: API.updateActivity(activityID),
-      method: 'PUT',
-      data: {
-        weixin_id: wx.getStorageSync('openid'),
-        activity_title: activityTitle
-      },
-      success: (res) => {
-        console.log('updateActivityTitle success', res);
-      },
-      fail: (err) => {
-        console.log('updateActivityTitle failed', err);
-      }
-    })
+  async updateActivityTitle(activityID, activityTitle) {
+    try {
+      const res = await requestWithLoading({
+        url: API.updateActivity(activityID),
+        method: 'PUT',
+        data: {
+          weixin_id: wx.getStorageSync('openid'),
+          activity_title: activityTitle
+        }
+      });
+      console.log('updateActivityTitle success', res);
+    } catch (err) {
+      console.log('updateActivityTitle failed', err);
+    }
   },
 
   showFullText(e) {
     const index = e.currentTarget.dataset.index;
-    this.setData({showFullTextIndex: index});
+    this.setData({ showFullTextIndex: index });
   },
 
   hideFullText() {
-    this.setData({showFullTextIndex: ''});
+    this.setData({ showFullTextIndex: '' });
   },
 
   handleCompleteItem(e) {
@@ -127,27 +163,30 @@ Page({
     this.updateActivityItem(activityID, itemID, '');
   },
 
-  updateActivityItem(activityID, itemID, itemStatus) {
-    wx.request({
-      url: API.updateActivityItem(activityID, itemID),
-      method: 'PUT',
-      data: {
-        weixin_id: wx.getStorageSync('openid'),
-        activity_item_status: itemStatus
-      },
-      success: (res) => {
-        console.log('updateActivityItem success', res);
-        this.setData({ activityItems: res.data.activity_items });
-      },
-      fail: (err) => {
-        console.log('updateActivityItem failed', err);
-      }
-    })
+  async updateActivityItem(activityID, itemID, itemStatus) {
+    try {
+      const res = await requestWithLoading({
+        url: API.updateActivityItem(activityID, itemID),
+        method: 'PUT',
+        data: {
+          weixin_id: wx.getStorageSync('openid'),
+          activity_item_status: itemStatus
+        }
+      });
+      console.log('updateActivityItem success', res);
+      this.setData({
+        activityItems: res.data.activity_items
+      }, () => {
+        this.calculateStats();
+      });
+    } catch (err) {
+      console.log('updateActivityItem failed', err);
+    }
   },
 
   handleDeleteItemCompletely(e) {
     const itemID = e.currentTarget.dataset.index;
-    const itemName= e.currentTarget.dataset.name;
+    const itemName = e.currentTarget.dataset.name;
     wx.showModal({
       title: '确认删除',
       content: '确定要删除 ' + itemName + ' 吗？',
@@ -159,21 +198,24 @@ Page({
     });
   },
 
-  deleteActivityItem(activityID, itemID) {
-    wx.request({
-      url: API.deleteActivityItem(activityID, itemID),
-      method: 'DELETE',
-      data: {
-        weixin_id: wx.getStorageSync('openid'),
-      },
-      success: (res) => {
-        console.log('deleteActivityItem success', res);
-        this.setData({ activityItems: res.data.activity_items });
-      },
-      fail: (err) => {
-        console.log('deleteActivityItem failed', err);
-      }
-    })
+  async deleteActivityItem(activityID, itemID) {
+    try {
+      const res = await requestWithLoading({
+        url: API.deleteActivityItem(activityID, itemID),
+        method: 'DELETE',
+        data: {
+          weixin_id: wx.getStorageSync('openid')
+        }
+      });
+      console.log('deleteActivityItem success', res);
+      this.setData({
+        activityItems: res.data.activity_items
+      }, () => {
+        this.calculateStats();
+      });
+    } catch (err) {
+      console.log('deleteActivityItem failed', err);
+    }
   },
 
   handleNewItemInput(e) {
@@ -184,12 +226,10 @@ Page({
 
   addNewItem() {
     const newItemName = this.data.newItemName;
-
     if (newItemName === '') {
       wx.showToast({ title: '请输入待办事项名称', icon: 'none' });
       return;
     }
-
     this.addActivityItem(this.data.activityID, newItemName);
 
     setTimeout(() => {
@@ -200,21 +240,25 @@ Page({
     }, 100);
   },
 
-  addActivityItem(activityID, newItemName) {
-    wx.request({
-      url: API.addActivityItem(activityID),
-      method: 'POST',
-      data: {
-        weixin_id: wx.getStorageSync('openid'),
-        activity_item_name: newItemName
-      },
-      success: (res) => {
-        console.log('addActivityItem success', res);
-        this.setData({ activityItems: res.data.activity_items });
-      },
-      fail: (err) => {
-        console.log('addActivityItem failed', err);
-      }
-    })
+  async addActivityItem(activityID, newItemName) {
+    try {
+      const res = await requestWithLoading({
+        url: API.addActivityItem(activityID),
+        method: 'POST',
+        data: {
+          weixin_id: wx.getStorageSync('openid'),
+          activity_item_name: newItemName
+        }
+      });
+      console.log('addActivityItem success', res);
+      this.setData({
+        activityItems: res.data.activity_items,
+        newItemName: ''
+      }, () => {
+        this.calculateStats();
+      });
+    } catch (err) {
+      console.log('addActivityItem failed', err);
+    }
   },
 });

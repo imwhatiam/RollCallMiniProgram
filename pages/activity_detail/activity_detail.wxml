@@ -16,8 +16,19 @@
   </view>
 
   <view class="activity-list-item">
-    <block wx:for="{{activityItems}}" wx:key="index">
 
+    <view class="stats-section">
+      <view class="stats-left">
+        <text class="stat-label">总计: {{totalCount}}</text>
+        <text class="stat-label">签到: {{checkedCount}}</text>
+        <text class="stat-label">取消: {{deletedCount}}</text>
+      </view>
+      <view class="stats-right">
+        <button class="refresh-btn" bindtap="refreshData">刷新</button>
+      </view>
+    </view>
+
+    <block wx:for="{{activityItems}}" wx:key="index">
       <view wx:if="{{item.status == 'completed'}}" class="list-item completed">
         <button
           class="complete-btn"
