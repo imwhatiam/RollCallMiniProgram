@@ -30,6 +30,10 @@
 
     <block wx:for="{{activityItems}}" wx:key="index">
       <view wx:if="{{item.status == 'completed'}}" class="list-item completed">
+        <!-- 头像显示在最左侧 -->
+        <view wx:if="{{item.operator_avatar}}" class="avatar-container">
+          <image class="operator-avatar" src="{{item.operator_avatar}}" mode="aspectFill"></image>
+        </view>
         <button
           class="complete-btn"
           bindtap="{{item.operator !== weixinID ? '' : 'handleUncompleteItem'}}"
@@ -40,6 +44,10 @@
       </view>
 
       <view wx:elif="{{item.status == 'deleted'}}" class="list-item deleted">
+        <!-- 头像显示在最左侧 -->
+        <view wx:if="{{item.operator_avatar}}" class="avatar-container">
+          <image class="operator-avatar" src="{{item.operator_avatar}}" mode="aspectFill"></image>
+        </view>
         <text class="item-text">{{index}}, {{item.name}}</text>
         <button
           class="delete-btn"
@@ -57,6 +65,10 @@
       </view>
 
       <view wx:else class="list-item">
+        <!-- 头像显示在最左侧 -->
+        <view wx:if="{{item.operator_avatar}}" class="avatar-container">
+          <image class="operator-avatar" src="{{item.operator_avatar}}" mode="aspectFill"></image>
+        </view>
         <button class="complete-btn" bindtap="handleCompleteItem" data-index="{{index}}">完成</button>
         <text class="{{showFullTextIndex===index ? 'item-full-text' : 'item-text'}}" bindlongpress="showFullText" bindtouchend="hideFullText" data-index="{{index}}">{{index}}, {{item.name}}</text>
         <block wx:if="{{showFullTextIndex!==index}}">

@@ -88,6 +88,23 @@
   transition: transform 0.2s ease;
 }
 
+.avatar-container {
+  width: 32px;
+  height: 32px;
+  margin-right: 10px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid #e0e0e0;
+}
+
+.operator-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: #f0f0f0; /* 默认背景色 */
+}
+
 .list-item.completed {
   background: #8FBC8F;
 }
