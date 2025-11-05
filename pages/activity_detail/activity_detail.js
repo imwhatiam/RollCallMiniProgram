@@ -3,14 +3,26 @@ import { API } from '../../config';
 // 通用请求封装：自动显示/隐藏加载中提示
 function requestWithLoading(options) {
   wx.showLoading({ title: '加载中...' });
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     wx.request({
       ...options,
       success(res) {
-        resolve(res);
+        if (res.data && res.data.error) {
+          wx.showToast({
+            title: res.data.error,
+            icon: 'none',
+            duration: 3000
+          });
+        } else {
+          resolve(res);
+        }
       },
       fail(err) {
-        reject(err);
+        wx.showToast({
+          title: '网络请求失败',
+          icon: 'none',
+          duration: 3000
+        });
       },
       complete() {
         wx.hideLoading();
@@ -21,23 +33,21 @@ function requestWithLoading(options) {
 
 Page({
 
-  onShareTimeline: function () {
-    return {
-      title: '活动点名/待办事项',
-    };
-  },
   onShareAppMessage: function () {
     return {
-      title: '活动点名/待办事项',
-      path: `/pages/activity_detail/activity_detail?activityID=` + this.data.activityID
-    };
+      title: this.data.activityTitle,
+      path: `/pages/activity_detail/activity_detail?activityID=${this.data.activityID}`,
+    }
   },
 
   data: {
-    openid: wx.getStorageSync('openid'),
+    weixinID: wx.getStorageSync('openid'),
+
     activityID: '',
     activityTitle: '',
     activityItems: [],
+    activityCreatorWeixinID: '',
+
     isEditingActivityTitle: false,
     newItemName: '',
     showFullTextIndex: '',
@@ -48,24 +58,28 @@ Page({
   },
 
   onLoad(options) {
-    if (options.activityID !== undefined) {
-      this.getActivityFromServer(parseInt(options.activityID));
+    if (options.activityID !== undefined && options.activityID !== null) {
+      this.getActivityFromServer(parseInt(options.activityID), options);
     } else {
-      wx.showToast({ title: 'activityID invalid', icon: 'none' });
+      wx.showToast({
+        title: `activityID invalid: ${options.activityID}`,
+        icon: 'none',
+        duration: 2000,
+      });
     }
   },
 
   async getActivityFromServer(activityID) {
     try {
       const res = await requestWithLoading({
-        url: API.getActivity(activityID),
+        url: API.getActivity(activityID, this.data.weixinID),
         method: 'GET',
-        data: { activity_id: activityID }
       });
 
       console.log('getActivityFromServer success', res);
       this.setData({
         activityID,
+        activityCreatorWeixinID: res.data.creator_weixin_id,
         activityTitle: res.data.activity_title,
         activityItems: res.data.activity_items,
         isEditingActivityTitle: false
@@ -120,7 +134,7 @@ Page({
         url: API.updateActivity(activityID),
         method: 'PUT',
         data: {
-          weixin_id: wx.getStorageSync('openid'),
+          weixin_id: this.data.weixinID,
           activity_title: activityTitle
         }
       });
@@ -169,7 +183,7 @@ Page({
         url: API.updateActivityItem(activityID, itemID),
         method: 'PUT',
         data: {
-          weixin_id: wx.getStorageSync('openid'),
+          weixin_id: this.data.weixinID,
           activity_item_status: itemStatus
         }
       });
@@ -204,7 +218,7 @@ Page({
         url: API.deleteActivityItem(activityID, itemID),
         method: 'DELETE',
         data: {
-          weixin_id: wx.getStorageSync('openid')
+          weixin_id: this.data.weixinID,
         }
       });
       console.log('deleteActivityItem success', res);
@@ -246,7 +260,7 @@ Page({
         url: API.addActivityItem(activityID),
         method: 'POST',
         data: {
-          weixin_id: wx.getStorageSync('openid'),
+          weixin_id: this.data.weixinID,
           activity_item_name: newItemName
         }
       });

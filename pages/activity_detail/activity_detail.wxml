@@ -32,9 +32,9 @@
       <view wx:if="{{item.status == 'completed'}}" class="list-item completed">
         <button
           class="complete-btn"
-          bindtap="{{item.operator !== openid ? '' : 'handleUncompleteItem'}}"
+          bindtap="{{item.operator !== weixinID ? '' : 'handleUncompleteItem'}}"
           data-index="{{index}}"
-          disabled="{{item.operator !== openid}}"
+          disabled="{{item.operator !== weixinID}}"
         >✓</button>
         <text class="item-text">{{index}}, {{item.name}}</text>
       </view>
@@ -43,16 +43,16 @@
         <text class="item-text">{{index}}, {{item.name}}</text>
         <button
           class="delete-btn"
-          bindtap="{{item.operator !== openid ? '' : 'handleUndeleteItem'}}"
+          bindtap="{{item.operator !== weixinID ? '' : 'handleUndeleteItem'}}"
           data-index="{{index}}"
-          disabled="{{item.operator !== openid}}"
+          disabled="{{item.operator !== weixinID}}"
         >x</button>
         <button
           class="delete-btn"
-          bindtap="{{item.operator !== openid ? '' : 'handleDeleteItemCompletely'}}"
+          bindtap="{{item.operator !== weixinID ? '' : 'handleDeleteItemCompletely'}}"
           data-index="{{index}}"
           data-name="{{item.name}}"
-          disabled="{{item.operator !== openid}}"
+          disabled="{{item.operator !== weixinID}}"
         >彻底删除</button>
       </view>
 

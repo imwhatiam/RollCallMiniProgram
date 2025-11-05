@@ -6,8 +6,8 @@ export const API = {
   saveWeixinUserInfo: `${API_BASE}/jscode2session/`,
 
   createNewActivity: `${API_BASE}/activities/`,
-  getActivities: (weixin_id) => `${API_BASE}/activities/?weixin_id=${weixin_id}`,
-  getActivity: (activityID) => `${API_BASE}/activities/${activityID}/`,
+  getActivities: (weixinID) => `${API_BASE}/activities/?weixin_id=${weixinID}`,
+  getActivity: (activityID, weixinID) => `${API_BASE}/activities/${activityID}/?weixin_id=${weixinID}`,
   updateActivity: (activityID) => `${API_BASE}/activities/${activityID}/`,
   deleteActivity: (activityID) => `${API_BASE}/activities/${activityID}/`,
 
