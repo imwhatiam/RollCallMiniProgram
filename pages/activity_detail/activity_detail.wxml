@@ -1,18 +1,25 @@
 <home-button />
 <view class="container">
   <view class="header">
-    <block wx:if="{{isEditingActivityTitle}}">
-      <input class="name-input"
-            value="{{activityTitle}}"
-            bindinput="handleActivityTitleInput"
-            bindblur="saveActivityTitle"
-            focus="{{isEditingActivityTitle}}" />
-    </block>
-    <block wx:else>
-      <view class="name-display" bindtap="startEditingActivityTitle">
-        {{activityTitle || '点击输入名称'}}
-      </view>
-    </block>
+    <view wx:if="{{activityCreatorWeixinID===weixinID}}">
+      <block wx:if="{{isEditingActivityTitle}}">
+        <input class="name-input"
+              value="{{activityTitle}}"
+              bindinput="handleActivityTitleInput"
+              bindblur="saveActivityTitle"
+              focus="{{isEditingActivityTitle}}" />
+      </block>
+      <block wx:else>
+        <view class="name-display" bindtap="startEditingActivityTitle">
+          {{activityTitle || '点击输入名称'}}
+        </view>
+      </block>
+    </view>
+    <view wx:else>
+       <view class="name-display">
+         {{activityTitle}}
+       </view>
+    </view>
   </view>
 
   <view class="activity-list-item">
@@ -30,44 +37,47 @@
 
     <block wx:for="{{activityItems}}" wx:key="index">
       <view wx:if="{{item.status == 'completed'}}" class="list-item completed">
-        <!-- 头像显示在最左侧 -->
-        <view wx:if="{{item.operator_avatar}}" class="avatar-container">
-          <image class="operator-avatar" src="{{item.operator_avatar}}" mode="aspectFill"></image>
+        <view wx:if="{{item.operator_avatar_url}}" class="avatar-container">
+          <image class="operator-avatar" src="{{item.operator_avatar_url}}" mode="aspectFill"></image>
         </view>
-        <button
-          class="complete-btn"
-          bindtap="{{item.operator !== weixinID ? '' : 'handleUncompleteItem'}}"
-          data-index="{{index}}"
-          disabled="{{item.operator !== weixinID}}"
-        >✓</button>
+
+        <view wx:if="{{item.operator === weixinID}}">
+          <button
+            class="complete-btn"
+            bindtap="handleUncompleteItem"
+            data-index="{{index}}"
+          >✓</button>
+        </view>
+
         <text class="item-text">{{index}}, {{item.name}}</text>
       </view>
 
       <view wx:elif="{{item.status == 'deleted'}}" class="list-item deleted">
-        <!-- 头像显示在最左侧 -->
-        <view wx:if="{{item.operator_avatar}}" class="avatar-container">
-          <image class="operator-avatar" src="{{item.operator_avatar}}" mode="aspectFill"></image>
+        <view wx:if="{{item.operator_avatar_url}}" class="avatar-container">
+          <image class="operator-avatar" src="{{item.operator_avatar_url}}" mode="aspectFill"></image>
         </view>
         <text class="item-text">{{index}}, {{item.name}}</text>
-        <button
-          class="delete-btn"
-          bindtap="{{item.operator !== weixinID ? '' : 'handleUndeleteItem'}}"
-          data-index="{{index}}"
-          disabled="{{item.operator !== weixinID}}"
-        >x</button>
-        <button
-          class="delete-btn"
-          bindtap="{{item.operator !== weixinID ? '' : 'handleDeleteItemCompletely'}}"
-          data-index="{{index}}"
-          data-name="{{item.name}}"
-          disabled="{{item.operator !== weixinID}}"
-        >彻底删除</button>
+
+        <view wx:if="{{item.operator === weixinID}}" style="display: flex; flex-direction: row;">
+          <button
+            class="delete-btn"
+            bindtap="handleUndeleteItem"
+            data-index="{{index}}"
+          >x</button>
+          <view wx:if="{{activityCreatorWeixinID === weixinID}}">
+            <button
+              class="delete-btn"
+              bindtap="handleDeleteItemCompletely"
+              data-index="{{index}}"
+              data-name="{{item.name}}"
+            >彻底删除</button>
+          </view>
+        </view>
       </view>
 
       <view wx:else class="list-item">
-        <!-- 头像显示在最左侧 -->
-        <view wx:if="{{item.operator_avatar}}" class="avatar-container">
-          <image class="operator-avatar" src="{{item.operator_avatar}}" mode="aspectFill"></image>
+        <view wx:if="{{item.operator_avatar_url}}" class="avatar-container">
+          <image class="operator-avatar" src="{{item.operator_avatar_url}}" mode="aspectFill"></image>
         </view>
         <button class="complete-btn" bindtap="handleCompleteItem" data-index="{{index}}">完成</button>
         <text class="{{showFullTextIndex===index ? 'item-full-text' : 'item-text'}}" bindlongpress="showFullText" bindtouchend="hideFullText" data-index="{{index}}">{{index}}, {{item.name}}</text>
@@ -77,7 +87,7 @@
     </block>
   </view>
 
-  <view class="bottom-view">
+  <view wx:if="{{activityCreatorWeixinID===weixinID}}" class="bottom-view">
     <input
       type="text"
       placeholder="请输入新人员/子事项"

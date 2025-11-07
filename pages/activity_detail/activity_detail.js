@@ -41,7 +41,7 @@ Page({
   },
 
   data: {
-    weixinID: wx.getStorageSync('weixinID'),
+    weixinID: '',
 
     activityID: '',
     activityTitle: '',
@@ -60,6 +60,7 @@ Page({
   onLoad(options) {
     if (options.activityID !== undefined && options.activityID !== null) {
       this.getActivityFromServer(parseInt(options.activityID), options);
+      this.setData({ weixinID: wx.getStorageSync('weixinID') });
     } else {
       wx.showToast({
         title: `activityID invalid: ${options.activityID}`,
