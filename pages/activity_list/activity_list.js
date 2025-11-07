@@ -18,12 +18,13 @@ Page({
   },
 
   onShow() {
+    console.log(wx.getStorageSync('weixinID'));
     this.getActivitiesFromServer()
   },
 
   getActivitiesFromServer() {
     wx.request({
-      url: API.getActivities(wx.getStorageSync('openid')),
+      url: API.getActivities(wx.getStorageSync('weixinID')),
       method: 'GET',
       success: (res) => {
         console.log('getActivitiesFromServer success', res);
@@ -68,7 +69,7 @@ Page({
       url: API.deleteActivity(activityID),
       method: 'DELETE',
       data: {
-        weixin_id: wx.getStorageSync('openid')
+        weixin_id: wx.getStorageSync('weixinID')
       },
       success: (res) => {
         console.log('deleteActivityFromServer success', res);

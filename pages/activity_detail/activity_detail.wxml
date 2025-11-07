@@ -20,7 +20,7 @@
     <view class="stats-section">
       <view class="stats-left">
         <text class="stat-label">总计: {{totalCount}}</text>
-        <text class="stat-label">签到: {{checkedCount}}</text>
+        <text class="stat-label">完成: {{checkedCount}}</text>
         <text class="stat-label">取消: {{deletedCount}}</text>
       </view>
       <view class="stats-right">
@@ -71,8 +71,7 @@
         </view>
         <button class="complete-btn" bindtap="handleCompleteItem" data-index="{{index}}">完成</button>
         <text class="{{showFullTextIndex===index ? 'item-full-text' : 'item-text'}}" bindlongpress="showFullText" bindtouchend="hideFullText" data-index="{{index}}">{{index}}, {{item.name}}</text>
-        <block wx:if="{{showFullTextIndex!==index}}">
-          <button class="delete-btn" bindtap="handleDeleteItem" data-index="{{index}}">删除</button>
+        <block wx:if="{{showFullTextIndex!==index}}"> <button class="delete-btn" bindtap="handleDeleteItem" data-index="{{index}}">取消</button>
         </block>
       </view>
     </block>

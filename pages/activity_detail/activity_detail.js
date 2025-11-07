@@ -41,7 +41,7 @@ Page({
   },
 
   data: {
-    weixinID: wx.getStorageSync('openid'),
+    weixinID: wx.getStorageSync('weixinID'),
 
     activityID: '',
     activityTitle: '',
@@ -72,7 +72,7 @@ Page({
   async getActivityFromServer(activityID) {
     try {
       const res = await requestWithLoading({
-        url: API.getActivity(activityID, this.data.weixinID),
+        url: API.getActivity(activityID, wx.getStorageSync('weixinID')),
         method: 'GET',
       });
 
@@ -134,7 +134,7 @@ Page({
         url: API.updateActivity(activityID),
         method: 'PUT',
         data: {
-          weixin_id: this.data.weixinID,
+          weixin_id: wx.getStorageSync('weixinID'),
           activity_title: activityTitle
         }
       });
@@ -183,7 +183,7 @@ Page({
         url: API.updateActivityItem(activityID, itemID),
         method: 'PUT',
         data: {
-          weixin_id: this.data.weixinID,
+          weixin_id: wx.getStorageSync('weixinID'),
           activity_item_status: itemStatus
         }
       });
@@ -218,7 +218,7 @@ Page({
         url: API.deleteActivityItem(activityID, itemID),
         method: 'DELETE',
         data: {
-          weixin_id: this.data.weixinID,
+          weixin_id: wx.getStorageSync('weixinID'),
         }
       });
       console.log('deleteActivityItem success', res);
@@ -260,7 +260,7 @@ Page({
         url: API.addActivityItem(activityID),
         method: 'POST',
         data: {
-          weixin_id: this.data.weixinID,
+          weixin_id: wx.getStorageSync('weixinID'),
           activity_item_name: newItemName
         }
       });

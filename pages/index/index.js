@@ -1,19 +1,37 @@
+const defaultAvatarUrl = 'https://www.lian-yolo.com/media/images/get-weixin-avatar.jpg'
 import { API } from '../../config';
 Page({
   data: {
-    userInfo: {},
+    avatarUrl: defaultAvatarUrl,
+    weixinID: '',
     hasUserInfo: false,
   },
 
   onLoad() {
-    const cachedUserInfo = wx.getStorageSync('userInfo');
-    if (cachedUserInfo) {
+    const cachedWeixinID = wx.getStorageSync('weixinID');
+    if (cachedWeixinID) {
       this.setData({
-        userInfo: cachedUserInfo,
+        weixinID: cachedWeixinID,
         hasUserInfo: true
       });
       this.navigateToActivityList();
     }
+  },
+
+  onChooseAvatar(e) {
+    const avatarFilePath = e.detail.avatarUrl;
+    wx.login({
+      success: (res) => {
+        if (res.code) {
+          this.saveUserInfoToServer(res.code, avatarFilePath);
+        } else {
+          console.log('no code from wx.login', res);
+        }
+      },
+      fail: (err) => {
+        console.log('wx.login failed', err);
+      }
+    });
   },
 
   navigateToActivityList() {
@@ -23,63 +41,27 @@ Page({
     })
   },
 
-  getUserProfile(e) {
-    wx.getUserProfile({
-      desc: '用于完善会员资料',
-      success: (res) => {
-        console.log('getUserProfile success', res);
-        const userInfo = res.userInfo;
-        this.setData({
-          userInfo: userInfo,
-          hasUserInfo: true
-        });
-        wx.setStorageSync('userInfo', userInfo);
-
-        wx.login({
-          success: (res) => {
-            if (res.code) {
-              this.saveUserInfoToServer(res.code, userInfo);
-              this.navigateToActivityList();
-            } else {
-              console.log('no code from wx.login', res);
-            }
-          },
-          fail: (err) => {
-            console.log('wx.login failed', err);
-          }
-        });
-      },
-      fail: (err) => {
-        console.log('wx.getUserProfile failed', err);
-      }
-    });
-  },
-
-  saveUserInfoToServer(jscode, userInfo) {
-    wx.request({
+  saveUserInfoToServer(jscode, avatarFilePath) {
+    wx.uploadFile({
       url: API.saveWeixinUserInfo,
-      method: 'POST',
-      data: {
+      filePath: avatarFilePath,
+      name: 'avatar',
+      formData: {
         code: jscode,
-        nickname: userInfo.nickName,
-        avatar_url: userInfo.avatarUrl,
       },
       success: (res) => {
-        const openid = res.data.data.openid;
-        wx.setStorageSync('openid', openid);
-        console.log('saveUserInfoToServer success', res);
+        const data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
+        console.log('上传成功', data);
+        wx.setStorageSync('weixinID', data.weixin_id);
+        this.setData({
+          weixinID: data.weixin_id,
+          hasUserInfo: true
+        })
+        this.navigateToActivityList();
       },
-      fail: (err) => {
-        console.log('saveUserInfoToServer failed', err);
+      fail(err) {
+        console.error('上传失败', err);
       }
     });
   },
-
-  clearUserInfo() {
-    this.setData({
-      userInfo: {},
-      hasUserInfo: false
-    });
-    wx.removeStorageSync('userInfo');
-  }
 })

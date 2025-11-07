@@ -50,11 +50,9 @@ Page({
       url: API.createNewActivity,
       method: 'POST',
       data: {
-        creator_weixin_id: wx.getStorageSync('openid'),
-        creator_weixin_name: wx.getStorageSync('userInfo').nickName,
+        creator_weixin_id: wx.getStorageSync('weixinID'),
         activity_title: activityTitle,
         activity_items: activityItems,
-        white_list: [wx.getStorageSync('openid')],
       },
       success: (res) => {
         console.log('createNewActivityOnServer success', res);
