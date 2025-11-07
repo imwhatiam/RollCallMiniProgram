@@ -1,0 +1,32 @@
+/**index.wxss**/
+page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.scrollarea {
+  flex: 1;
+  overflow-y: hidden;
+}
+
+.tip-image {
+  width: 200rpx;
+  height: 200rpx;
+  background-color: #f0f0f0;
+  border: 2rpx dashed #cccccc;
+  border-radius: 10rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20rpx;
+  box-sizing: border-box;
+}
+
+.tip-line {
+  color: #666666;
+  font-size: 28rpx;
+  line-height: 1.6;
+  display: block;
+}

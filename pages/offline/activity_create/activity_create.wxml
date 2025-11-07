@@ -1,0 +1,18 @@
+<home-button />
+<view class="container">
+  <view class="input-group">
+    <input class="name-input"
+            placeholder="活动/事项名称"
+            value="{{activityName}}"
+            bindinput="handleActivityNameInput"/>
+  </view>
+  <view class="input-group">
+    <textarea class="items-input"
+              placeholder="输入参与人员/子事项\n\n张三\n李四\n王五\n\n或者\n\n事项一\n事项二\n事项三"
+              maxlength="1000"
+              bindinput="handleActivityItemsInput"/>
+  </view>
+  <view class="bottom-view">
+    <button class="create-save-update-btn" bindtap="saveActivity">保存</button>
+  </view>
+</view>

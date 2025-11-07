@@ -1,0 +1,11 @@
+<view class="container">
+  <block wx:if="{{!hasUserInfo}}">
+    <button open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
+      <view class="tip-image">
+        <text class="tip-line">请点这里</text>
+        <text class="tip-line">以便获取</text>
+        <text class="tip-line">微信头像</text>
+      </view>
+    </button>
+  </block>
+</view>

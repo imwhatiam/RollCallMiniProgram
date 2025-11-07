@@ -1,0 +1,19 @@
+<home-button />
+<view class="container">
+  <view class="activity-list">
+    <block wx:for="{{activities}}" wx:key="index">
+      <view class="list-item">
+        <view class="content" bindtap="navigateToActivity" data-index="{{index}}">
+          <text class="name">{{item.activityName}}</text>
+          <text class="count">{{item.completedCount}}/{{item.deletedCount}}/{{item.activityItems.length}}</text>
+        </view>
+        <view class="action">
+          <button class="delete-btn" bindtap="deleteActivity" data-index="{{index}}">删除</button>
+        </view>
+      </view>
+    </block>
+  </view>
+  <view class="bottom-view">
+    <button class="create-save-update-btn" bindtap="createNewActivity">新建</button>
+  </view>
+</view>

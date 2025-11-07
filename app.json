@@ -1,9 +1,13 @@
 {
   "pages": [
     "pages/index/index",
+    "pages/login/login",
     "pages/activity_list/activity_list",
     "pages/activity_create/activity_create",
-    "pages/activity_detail/activity_detail"
+    "pages/activity_detail/activity_detail",
+    "pages/offline/activity_list/activity_list",
+    "pages/offline/activity_create/activity_create",
+    "pages/offline/activity_detail/activity_detail"
   ],
   "usingComponents": {
     "home-button": "/components/home-button/home-button"

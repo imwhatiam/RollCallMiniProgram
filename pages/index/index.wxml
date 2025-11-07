@@ -1,11 +1,9 @@
 <view class="container">
-  <block wx:if="{{!hasUserInfo}}">
-    <button open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
-      <view class="tip-image">
-        <text class="tip-line">请点这里</text>
-        <text class="tip-line">以便获取</text>
-        <text class="tip-line">微信头像</text>
-      </view>
-    </button>
-  </block>
+  <view class="title">点名签到小工具</view>
+  <button class="btn online-btn" bindtap="navigateToLogin">使用在线版</button>
+  <button class="btn offline-btn" bindtap="navigateToActivityList">使用离线版</button>
+  <view class="note">
+    在线版需要网络连接，可共享名单给他人<text decode="true">\n</text>
+    离线版只能自己使用
+  </view>
 </view>
