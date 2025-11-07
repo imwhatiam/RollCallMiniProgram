@@ -3,14 +3,14 @@ Page({
 
   onShareTimeline: function () {
     return {
-      title: '活动点名/待办事项',
+      title: '点名签到小工具',
     };
   },
 
   onShareAppMessage: function () {
     return {
-      title: '活动点名/待办事项',
-      path: '/pages/activity_list/activity_list'
+      title: '点名签到小工具',
+      path: '/pages/index/index',
     };
   },
 

@@ -1,5 +1,19 @@
 import { API } from '../../config';
 Page({
+
+  onShareTimeline: function () {
+    return {
+      title: '点名签到小工具',
+    };
+  },
+
+  onShareAppMessage: function () {
+    return {
+      title: '点名签到小工具',
+      path: '/pages/index/index',
+    };
+  },
+
   data: {
     weixinID: '',
     hasUserInfo: false,
