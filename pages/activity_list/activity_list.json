@@ -1,4 +1,5 @@
 {
   "usingComponents": {
+    "collapse-list": "/components/collapse-list/collapse-list"
   }
 }

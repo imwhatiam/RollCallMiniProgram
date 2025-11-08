@@ -1,0 +1,11 @@
+<view class="collapse-section">
+  <view class="collapse-header" bindtap="toggleCollapse">
+    <text class="header-title">{{title}}</text>
+    <view class="arrow-icon {{isCollapsed ? 'collapsed' : 'expanded'}}">
+      <view class="arrow"></view>
+    </view>
+  </view>
+  <view class="collapse-content {{isCollapsed ? 'collapsed' : 'expanded'}}">
+    <slot></slot>
+  </view>
+</view>

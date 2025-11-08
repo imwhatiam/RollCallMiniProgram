@@ -181,7 +181,9 @@ Page({
       console.log('initActivityItems success', res);
       this.setData({
         items: res.data.activity_items
-      })
+      }, () => {
+        this.calculateStats();
+      });
     } catch (err) {
       console.log('initActivityItems failed', err);
     }

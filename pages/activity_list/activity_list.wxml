@@ -1,17 +1,52 @@
 <home-button />
 <view class="container">
   <view class="activity-list">
-    <block wx:for="{{activities}}" wx:key="index">
-      <view class="list-item">
-        <view class="content" bindtap="navigateToActivity" data-index="{{index}}" data-id="{{item.id}}">
-          <text class="name">{{item.activity_title}}</text>
+    <!-- 我创建的活动 -->
+    <collapse-list
+      title="我创建的"
+      initiallyExpanded="{{true}}"
+      bindtoggle="onMyActivitiesToggle"
+    >
+      <block wx:for="{{myActivities}}" wx:key="id">
+        <view class="list-item">
+          <view class="content" bindtap="navigateToActivity" data-id="{{item.id}}">
+            <text class="name">{{item.activity_title}}</text>
+          </view>
+          <view class="action">
+            <button
+              class="delete-btn"
+              bindtap="deleteActivity"
+              data-index="{{index}}"
+              data-source="my"
+            >删除</button>
+          </view>
         </view>
-        <view class="action">
-          <button class="delete-btn" bindtap="deleteActivity" data-index="{{index}}">删除</button>
+      </block>
+    </collapse-list>
+
+    <collapse-list
+      title="共享给我的"
+      initiallyExpanded="{{true}}"
+      bindtoggle="onSharedActivitiesToggle"
+    >
+      <block wx:for="{{sharedActivities}}" wx:key="id">
+        <view class="list-item">
+          <view class="content" bindtap="navigateToActivity" data-id="{{item.id}}">
+            <text class="name">{{item.activity_title}}</text>
+          </view>
+          <view class="action">
+            <button
+              class="delete-btn"
+              bindtap="deleteActivity"
+              data-index="{{index}}"
+              data-source="shared"
+            >删除</button>
+          </view>
         </view>
-      </view>
-    </block>
+      </block>
+    </collapse-list>
   </view>
+
   <view class="bottom-view">
     <button class="create-save-update-btn" bindtap="createNewActivity">新建</button>
   </view>
