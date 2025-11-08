@@ -35,32 +35,33 @@ Page({
 
   onShareAppMessage: function () {
     return {
-      title: this.data.activityTitle,
+      title: this.data.title,
       path: `/pages/activity_detail/activity_detail?activityID=${this.data.activityID}`,
     }
   },
 
   data: {
-    weixinID: '',
+    currentUserWeixinID: '',
 
     activityID: '',
-    activityTitle: '',
-    activityItems: [],
-    activityCreatorWeixinID: '',
+    title: '',
+    items: [],
+    creatorWeixinID: '',
 
-    isEditingActivityTitle: false,
+    isEditingTitle: false,
     newItemName: '',
     showFullTextIndex: '',
 
     totalCount: 0,
     checkedCount: 0,
     deletedCount: 0,
+    uncheckedCount: 0,
   },
 
   onLoad(options) {
     if (options.activityID !== undefined && options.activityID !== null) {
       this.getActivityFromServer(parseInt(options.activityID), options);
-      this.setData({ weixinID: wx.getStorageSync('weixinID') });
+      this.setData({ currentUserWeixinID: wx.getStorageSync('weixinID') });
     } else {
       wx.showToast({
         title: `activityID invalid: ${options.activityID}`,
@@ -80,10 +81,11 @@ Page({
       console.log('getActivityFromServer success', res);
       this.setData({
         activityID,
-        activityCreatorWeixinID: res.data.creator_weixin_id,
-        activityTitle: res.data.activity_title,
-        activityItems: res.data.activity_items,
-        isEditingActivityTitle: false
+        creatorWeixinID: res.data.creator_weixin_id,
+        title: res.data.activity_title,
+        items: res.data.activity_items,
+        whiteList: res.data.white_list,
+        isEditingTitle: false
       }, () => {
         this.calculateStats();
       });
@@ -93,55 +95,37 @@ Page({
     }
   },
 
-  calculateStats() {
-    const items = this.data.activityItems || [];
-    const itemArray = Object.values(items);
-    const totalCount = itemArray.length;
-    const checkedCount = itemArray.filter(item => item.status === 'completed').length;
-    const deletedCount = itemArray.filter(item => item.status === 'deleted').length;
-
-    this.setData({
-      totalCount,
-      checkedCount,
-      deletedCount
-    });
+  startEditingTitle() {
+    this.setData({ isEditingTitle: true });
   },
 
-  refreshData() {
-    this.getActivityFromServer(this.data.activityID);
+  handleTitleInput(e) {
+    this.setData({ title: e.detail.value });
   },
 
-  startEditingActivityTitle() {
-    this.setData({ isEditingActivityTitle: true });
-  },
-
-  handleActivityTitleInput(e) {
-    this.setData({ activityTitle: e.detail.value });
-  },
-
-  saveActivityTitle() {
-    const { activityTitle, activityID } = this.data;
-    if (!activityTitle.trim()) {
+  saveTitle() {
+    const { title, activityID } = this.data;
+    if (!title.trim()) {
       wx.showToast({ title: '活动/事项名称不能为空', icon: 'none' });
       return;
     }
-    this.setData({ isEditingActivityTitle: false });
-    this.updateActivityTitle(activityID, activityTitle);
+    this.setData({ isEditingTitle: false });
+    this.updateTitle(activityID, title);
   },
 
-  async updateActivityTitle(activityID, activityTitle) {
+  async updateTitle(activityID, title) {
     try {
       const res = await requestWithLoading({
         url: API.updateActivity(activityID),
         method: 'PUT',
         data: {
           weixin_id: wx.getStorageSync('weixinID'),
-          activity_title: activityTitle
+          activity_title: title
         }
       });
-      console.log('updateActivityTitle success', res);
+      console.log('updateTitle success', res);
     } catch (err) {
-      console.log('updateActivityTitle failed', err);
+      console.log('updateTitle failed', err);
     }
   },
 
@@ -152,6 +136,55 @@ Page({
 
   hideFullText() {
     this.setData({ showFullTextIndex: '' });
+  },
+
+  calculateStats() {
+    const items = this.data.items || [];
+    const itemArray = Object.values(items);
+    const totalCount = itemArray.length;
+    const checkedCount = itemArray.filter(item => item.status === 'completed').length;
+    const deletedCount = itemArray.filter(item => item.status === 'deleted').length;
+
+    this.setData({
+      totalCount,
+      checkedCount,
+      deletedCount,
+      uncheckedCount: totalCount - checkedCount - deletedCount,
+    });
+  },
+
+  refreshData() {
+    this.getActivityFromServer(this.data.activityID);
+  },
+
+  initItems() {
+    wx.showModal({
+      title: '初始化所有人员',
+      content: '确定将所有人员都初始化为未签到吗？',
+      success: res => {
+        if (res.confirm) {
+          this.initActivityItems(this.data.activityID);
+        }
+      }
+    });
+  },
+
+  async initActivityItems(activityID) {
+    try {
+      const res = await requestWithLoading({
+        url: API.initActivityItems(activityID),
+        method: 'PUT',
+        data: {
+          weixin_id: wx.getStorageSync('weixinID')
+        }
+      });
+      console.log('initActivityItems success', res);
+      this.setData({
+        items: res.data.activity_items
+      })
+    } catch (err) {
+      console.log('initActivityItems failed', err);
+    }
   },
 
   handleCompleteItem(e) {
@@ -190,7 +223,7 @@ Page({
       });
       console.log('updateActivityItem success', res);
       this.setData({
-        activityItems: res.data.activity_items
+        items: res.data.activity_items
       }, () => {
         this.calculateStats();
       });
@@ -204,7 +237,7 @@ Page({
     const itemName = e.currentTarget.dataset.name;
     wx.showModal({
       title: '确认删除',
-      content: '确定要删除 ' + itemName + ' 吗？',
+      content: '确定从服务器中彻底删除 ' + itemName + ' 吗？',
       success: res => {
         if (res.confirm) {
           this.deleteActivityItem(this.data.activityID, itemID);
@@ -224,7 +257,7 @@ Page({
       });
       console.log('deleteActivityItem success', res);
       this.setData({
-        activityItems: res.data.activity_items
+        items: res.data.activity_items
       }, () => {
         this.calculateStats();
       });
@@ -267,7 +300,7 @@ Page({
       });
       console.log('addActivityItem success', res);
       this.setData({
-        activityItems: res.data.activity_items,
+        items: res.data.activity_items,
         newItemName: ''
       }, () => {
         this.calculateStats();

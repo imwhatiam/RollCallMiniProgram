@@ -12,6 +12,7 @@ export const API = {
   deleteActivity: (activityID) => `${API_BASE}/activities/${activityID}/`,
 
   addActivityItem: (activityID) => `${API_BASE}/activities/${activityID}/items/`,
+  initActivityItems: (activityID) => `${API_BASE}/activities/${activityID}/init-items/`,
   updateActivityItem: (activityID, itemID) => `${API_BASE}/activities/${activityID}/items/${itemID}/`,
   deleteActivityItem: (activityID, itemID) => `${API_BASE}/activities/${activityID}/items/${itemID}/`,
 };

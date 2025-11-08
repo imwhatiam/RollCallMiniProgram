@@ -38,7 +38,6 @@
   align-items: center;
   justify-content: space-between;
   width: 300px;
-  padding: 12px;
   margin: 10px auto;
   background: white;
 }
@@ -61,7 +60,7 @@
   justify-content: flex-end;
 }
 
-.refresh-btn {
+.refresh-btn, .init-btn {
   background: blue;
   color: white;
   font-size: 14px;

@@ -1,47 +1,49 @@
 <home-button />
 <view class="container">
   <view class="header">
-    <view wx:if="{{activityCreatorWeixinID===weixinID}}">
-      <block wx:if="{{isEditingActivityTitle}}">
+    <view wx:if="{{currentUserWeixinID===creatorWeixinID}}">
+      <block wx:if="{{isEditingTitle}}">
         <input class="name-input"
-              value="{{activityTitle}}"
-              bindinput="handleActivityTitleInput"
-              bindblur="saveActivityTitle"
-              focus="{{isEditingActivityTitle}}" />
+              value="{{title}}"
+              bindinput="handleTitleInput"
+              bindblur="saveTitle"
+              focus="{{isEditingTitle}}" />
       </block>
       <block wx:else>
-        <view class="name-display" bindtap="startEditingActivityTitle">
-          {{activityTitle || '点击输入名称'}}
+        <view class="name-display" bindtap="startEditingTitle">
+          {{title || '点击输入名称'}}
         </view>
       </block>
     </view>
     <view wx:else>
        <view class="name-display">
-         {{activityTitle}}
+         {{title}}
        </view>
     </view>
   </view>
 
-  <view class="activity-list-item">
+  <button class="init-btn" bindtap="initItems">一键全部未签到</button>
 
-    <view class="stats-section">
-      <view class="stats-left">
-        <text class="stat-label">总计: {{totalCount}}</text>
-        <text class="stat-label">完成: {{checkedCount}}</text>
-        <text class="stat-label">取消: {{deletedCount}}</text>
-      </view>
-      <view class="stats-right">
-        <button class="refresh-btn" bindtap="refreshData">刷新</button>
-      </view>
+  <view class="stats-section">
+    <view class="stats-left">
+      <text class="stat-label">总计: {{totalCount}}</text>
+      <text class="stat-label">签到: {{checkedCount}}</text>
+      <text class="stat-label">取消: {{deletedCount}}</text>
+      <text class="stat-label">剩余: {{uncheckedCount}}</text>
     </view>
+    <view class="stats-right">
+      <button class="refresh-btn" bindtap="refreshData">刷新</button>
+    </view>
+  </view>
 
-    <block wx:for="{{activityItems}}" wx:key="index">
+  <view class="activity-list-item">
+    <block wx:for="{{items}}" wx:key="index">
       <view wx:if="{{item.status == 'completed'}}" class="list-item completed">
         <view wx:if="{{item.operator_avatar_url}}" class="avatar-container">
           <image class="operator-avatar" src="{{item.operator_avatar_url}}" mode="aspectFill"></image>
         </view>
 
-        <view wx:if="{{item.operator === weixinID}}">
+        <view wx:if="{{currentUserWeixinID===item.operator || currentUserWeixinID===creatorWeixinID}}">
           <button
             class="complete-btn"
             bindtap="handleUncompleteItem"
@@ -58,13 +60,13 @@
         </view>
         <text class="item-text">{{index}}, {{item.name}}</text>
 
-        <view wx:if="{{item.operator === weixinID}}" style="display: flex; flex-direction: row;">
+        <view wx:if="{{currentUserWeixinID===item.operator || currentUserWeixinID===creatorWeixinID}}" style="display: flex; flex-direction: row;">
           <button
             class="delete-btn"
             bindtap="handleUndeleteItem"
             data-index="{{index}}"
           >x</button>
-          <view wx:if="{{activityCreatorWeixinID === weixinID}}">
+          <view wx:if="{{currentUserWeixinID===creatorWeixinID}}">
             <button
               class="delete-btn"
               bindtap="handleDeleteItemCompletely"
@@ -79,7 +81,7 @@
         <view wx:if="{{item.operator_avatar_url}}" class="avatar-container">
           <image class="operator-avatar" src="{{item.operator_avatar_url}}" mode="aspectFill"></image>
         </view>
-        <button class="complete-btn" bindtap="handleCompleteItem" data-index="{{index}}">完成</button>
+        <button class="complete-btn" bindtap="handleCompleteItem" data-index="{{index}}">签到</button>
         <text class="{{showFullTextIndex===index ? 'item-full-text' : 'item-text'}}" bindlongpress="showFullText" bindtouchend="hideFullText" data-index="{{index}}">{{index}}, {{item.name}}</text>
         <block wx:if="{{showFullTextIndex!==index}}"> <button class="delete-btn" bindtap="handleDeleteItem" data-index="{{index}}">取消</button>
         </block>
@@ -87,7 +89,7 @@
     </block>
   </view>
 
-  <view wx:if="{{activityCreatorWeixinID===weixinID}}" class="bottom-view">
+  <view wx:if="{{currentUserWeixinID===creatorWeixinID}}" class="bottom-view">
     <input
       type="text"
       placeholder="请输入新人员/子事项"
