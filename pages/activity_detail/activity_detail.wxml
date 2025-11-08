@@ -22,7 +22,9 @@
     </view>
   </view>
 
-  <button class="init-btn" bindtap="initItems">一键全部未签到</button>
+  <view wx:if="{{currentUserWeixinID===creatorWeixinID}}">
+    <button class="init-btn" bindtap="initItems">一键全部未签到</button>
+  </view>
 
   <view class="stats-section">
     <view class="stats-left">
