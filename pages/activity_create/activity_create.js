@@ -123,7 +123,6 @@ Page({
     if (err.errMsg && err.errMsg.includes('timeout')) {
       errorMessage = '网络请求超时，请检查网络连接';
     }
-
     wx.showToast({
       title: errorMessage,
       icon: 'none',

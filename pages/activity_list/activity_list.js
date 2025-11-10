@@ -67,7 +67,7 @@ Page({
   navigateToActivity(e) {
     const activityID = e.currentTarget.dataset.id;
     wx.navigateTo({
-      url: `/pages/activity_detail/activity_detail?activityID=` + activityID
+      url: `/pages/activity_detail/activity_detail?activityID=${activityID}`
     });
   },
 

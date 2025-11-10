@@ -28,15 +28,24 @@ Page({
 
   // Page load lifecycle
   onLoad(options) {
-    if (options.activityID) {
-      this.getActivityFromServer(parseInt(options.activityID));
-      this.setData({ currentUserWeixinID: wx.getStorageSync('weixinID') });
-    } else {
-      wx.showToast({
-        title: `活动ID无效: ${options.activityID}`,
-        icon: 'none',
-        duration: 2000,
+    const activityID = options.activityID;
+    if (wx.getStorageSync('weixinID') === '') {
+      const redirect = `/pages/activity_detail/activity_detail?activityID=${activityID}`;
+      const encodedRedirect = encodeURIComponent(redirect);
+      wx.navigateTo({
+        url: `/pages/login/login?redirect=${encodedRedirect}`
       });
+    } else {
+      if (activityID) {
+        this.getActivityFromServer(parseInt(activityID));
+        this.setData({ currentUserWeixinID: wx.getStorageSync('weixinID') });
+      } else {
+        wx.showToast({
+          title: `活动ID无效: ${activityID}`,
+          icon: 'none',
+          duration: 2000,
+        });
+      }
     }
   },
 

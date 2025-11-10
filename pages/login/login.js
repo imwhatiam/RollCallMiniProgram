@@ -15,16 +15,18 @@ Page({
   },
 
   data: {
-    weixinID: '',
     hasUserInfo: false,
+    redirect: ''
   },
 
-  onLoad() {
+  onLoad(options) {
+    this.setData({
+      redirect: decodeURIComponent(options.redirect || '')
+    });
     const cachedWeixinID = wx.getStorageSync('weixinID');
     if (cachedWeixinID) {
       this.setData({
-        weixinID: cachedWeixinID,
-        hasUserInfo: true
+        hasUserInfo: true,
       });
       this.navigateToActivityList();
     }
@@ -66,10 +68,15 @@ Page({
         console.log('上传成功', data);
         wx.setStorageSync('weixinID', data.weixin_id);
         this.setData({
-          weixinID: data.weixin_id,
           hasUserInfo: true
         })
-        this.navigateToActivityList();
+        if (this.data.redirect) {
+          wx.navigateTo({
+            url: this.data.redirect,
+          });
+        } else {
+          this.navigateToActivityList();
+        };
       },
       fail(err) {
         console.error('上传失败', err);
