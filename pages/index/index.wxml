@@ -1,7 +1,7 @@
 <view class="container">
   <view class="title">点名签到小工具</view>
-  <button class="btn online-btn" bindtap="navigateToLogin">使用在线版</button>
-  <button class="btn offline-btn" bindtap="navigateToActivityList">使用离线版</button>
+  <button class="btn online-btn" bindtap="navigateToOnline">使用在线版</button>
+  <button class="btn offline-btn" bindtap="navigateToOffline">使用离线版</button>
   <view class="note">
     在线版需要网络连接，可共享名单给他人<text decode="true">\n</text>
     离线版只能自己使用

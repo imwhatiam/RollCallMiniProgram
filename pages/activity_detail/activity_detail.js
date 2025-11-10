@@ -56,13 +56,28 @@ Page({
         url: API.getActivity(activityID, wx.getStorageSync('weixinID')),
         method: 'GET',
       });
-
       console.log('getActivityFromServer success', res);
       this.updateActivityData(res.data, activityID);
     } catch (err) {
       console.log('getActivityFromServer failed', err);
-      // Additional error handling since requestWithLoading might not cover all cases
-      wx.showToast({ title: '加载失败', icon: 'none' });
+      const toastDuration = 2000;
+      if (err && err.statusCode === 404) {
+        wx.showToast({
+          title: '活动不存在或已被删除',
+          icon: 'none',
+          duration: toastDuration
+        });
+        setTimeout(() => {
+          wx.reLaunch({ url: '/pages/index/index' });
+        }, toastDuration);
+
+        return;
+      }
+      wx.showToast({
+        title: (err && err.message) ? err.message : '请求失败',
+        icon: 'none',
+        duration: 2000
+      });
     }
   },
 
@@ -115,6 +130,11 @@ Page({
       console.log('updateTitle success', res);
     } catch (err) {
       console.log('updateTitle failed', err);
+      wx.showToast({
+        title: (err && err.message) ? err.message : '请求失败',
+        icon: 'none',
+        duration: 2000
+      });
     }
   },
 
@@ -177,6 +197,11 @@ Page({
       this.updateItemsAndStats(res.data.activity_items);
     } catch (err) {
       console.log('initActivityItems failed', err);
+      wx.showToast({
+        title: (err && err.message) ? err.message : '请求失败',
+        icon: 'none',
+        duration: 2000
+      });
     }
   },
 
@@ -223,6 +248,11 @@ Page({
       this.updateItemsAndStats(res.data.activity_items);
     } catch (err) {
       console.log('updateActivityItem failed', err);
+      wx.showToast({
+        title: (err && err.message) ? err.message : '请求失败',
+        icon: 'none',
+        duration: 2000
+      });
     }
   },
 
@@ -255,6 +285,11 @@ Page({
       this.updateItemsAndStats(res.data.activity_items);
     } catch (err) {
       console.log('deleteActivityItem failed', err);
+      wx.showToast({
+        title: (err && err.message) ? err.message : '请求失败',
+        icon: 'none',
+        duration: 2000
+      });
     }
   },
 
@@ -298,6 +333,11 @@ Page({
       this.updateItemsAndStats(res.data.activity_items, '');
     } catch (err) {
       console.log('addActivityItem failed', err);
+      wx.showToast({
+        title: (err && err.message) ? err.message : '请求失败',
+        icon: 'none',
+        duration: 2000
+      });
     }
   },
 

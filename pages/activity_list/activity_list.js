@@ -45,7 +45,11 @@ Page({
       });
     } catch (err) {
       console.log('getActivitiesFromServer failed', err);
-      // Error handling is done in requestWithLoading
+      wx.showToast({
+        title: (err && err.message) ? err.message : '请求失败',
+        icon: 'none',
+        duration: 2000
+      });
     }
   },
 
@@ -114,7 +118,11 @@ Page({
       }
     } catch (err) {
       console.log('deleteActivityFromServer failed', err);
-      // Error handling is done in requestWithLoading
+      wx.showToast({
+        title: (err && err.message) ? err.message : '请求失败',
+        icon: 'none',
+        duration: 2000
+      });
     }
   },
 

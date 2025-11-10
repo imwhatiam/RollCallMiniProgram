@@ -17,13 +17,20 @@ Page({
   },
   onLoad() {
   },
-  navigateToLogin() {
-    console.log('nav to login')
-    wx.navigateTo({
-      url: `/pages/login/login`
-    })
+  navigateToOnline() {
+    if (wx.getStorageSync('weixinID')) {
+      console.log('nav to online activity list')
+      wx.navigateTo({
+        url: `/pages/activity_list/activity_list`
+      })
+    } else {
+      console.log('nav to login')
+      wx.navigateTo({
+        url: `/pages/login/login`
+      })
+    }
   },
-  navigateToActivityList() {
+  navigateToOffline() {
     console.log('nav to offline activity list')
     wx.navigateTo({
       url: `/pages/offline/activity_list/activity_list`
