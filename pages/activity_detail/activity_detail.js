@@ -1,38 +1,9 @@
 import { API } from '../../config';
-
-// 通用请求封装：自动显示/隐藏加载中提示
-function requestWithLoading(options) {
-  wx.showLoading({ title: '加载中...' });
-  return new Promise((resolve) => {
-    wx.request({
-      ...options,
-      success(res) {
-        if (res.data && res.data.error) {
-          wx.showToast({
-            title: res.data.error,
-            icon: 'none',
-            duration: 3000
-          });
-        } else {
-          resolve(res);
-        }
-      },
-      fail(err) {
-        wx.showToast({
-          title: '网络请求失败',
-          icon: 'none',
-          duration: 3000
-        });
-      },
-      complete() {
-        wx.hideLoading();
-      }
-    });
-  });
-}
+import { requestWithLoading } from '../../utils/utils';
 
 Page({
 
+  // Share activity
   onShareAppMessage: function () {
     return {
       title: this.data.title,
@@ -42,35 +13,34 @@ Page({
 
   data: {
     currentUserWeixinID: '',
-
     activityID: '',
     title: '',
     items: [],
     creatorWeixinID: '',
-
     isEditingTitle: false,
     newItemName: '',
     showFullTextIndex: '',
-
     totalCount: 0,
     checkedCount: 0,
     deletedCount: 0,
     uncheckedCount: 0,
   },
 
+  // Page load lifecycle
   onLoad(options) {
-    if (options.activityID !== undefined && options.activityID !== null) {
-      this.getActivityFromServer(parseInt(options.activityID), options);
+    if (options.activityID) {
+      this.getActivityFromServer(parseInt(options.activityID));
       this.setData({ currentUserWeixinID: wx.getStorageSync('weixinID') });
     } else {
       wx.showToast({
-        title: `activityID invalid: ${options.activityID}`,
+        title: `活动ID无效: ${options.activityID}`,
         icon: 'none',
         duration: 2000,
       });
     }
   },
 
+  // Fetch activity data from server
   async getActivityFromServer(activityID) {
     try {
       const res = await requestWithLoading({
@@ -79,30 +49,39 @@ Page({
       });
 
       console.log('getActivityFromServer success', res);
-      this.setData({
-        activityID,
-        creatorWeixinID: res.data.creator_weixin_id,
-        title: res.data.activity_title,
-        items: res.data.activity_items,
-        whiteList: res.data.white_list,
-        isEditingTitle: false
-      }, () => {
-        this.calculateStats();
-      });
+      this.updateActivityData(res.data, activityID);
     } catch (err) {
       console.log('getActivityFromServer failed', err);
+      // Additional error handling since requestWithLoading might not cover all cases
       wx.showToast({ title: '加载失败', icon: 'none' });
     }
   },
 
+  // Update activity data and calculate stats
+  updateActivityData(activityData, activityID) {
+    this.setData({
+      activityID,
+      creatorWeixinID: activityData.creator_weixin_id,
+      title: activityData.activity_title,
+      items: activityData.activity_items,
+      whiteList: activityData.white_list,
+      isEditingTitle: false
+    }, () => {
+      this.calculateStats();
+    });
+  },
+
+  // Start editing title
   startEditingTitle() {
     this.setData({ isEditingTitle: true });
   },
 
+  // Handle title input
   handleTitleInput(e) {
     this.setData({ title: e.detail.value });
   },
 
+  // Save title changes
   saveTitle() {
     const { title, activityID } = this.data;
     if (!title.trim()) {
@@ -113,6 +92,7 @@ Page({
     this.updateTitle(activityID, title);
   },
 
+  // Update title on server
   async updateTitle(activityID, title) {
     try {
       const res = await requestWithLoading({
@@ -129,15 +109,18 @@ Page({
     }
   },
 
+  // Show full text of item
   showFullText(e) {
     const index = e.currentTarget.dataset.index;
     this.setData({ showFullTextIndex: index });
   },
 
+  // Hide full text
   hideFullText() {
     this.setData({ showFullTextIndex: '' });
   },
 
+  // Calculate activity statistics
   calculateStats() {
     const items = this.data.items || [];
     const itemArray = Object.values(items);
@@ -153,10 +136,12 @@ Page({
     });
   },
 
+  // Refresh activity data
   refreshData() {
     this.getActivityFromServer(this.data.activityID);
   },
 
+  // Initialize all items (reset status)
   initItems() {
     wx.showModal({
       title: '初始化所有人员',
@@ -169,6 +154,7 @@ Page({
     });
   },
 
+  // Initialize activity items on server
   async initActivityItems(activityID) {
     try {
       const res = await requestWithLoading({
@@ -179,40 +165,41 @@ Page({
         }
       });
       console.log('initActivityItems success', res);
-      this.setData({
-        items: res.data.activity_items
-      }, () => {
-        this.calculateStats();
-      });
+      this.updateItemsAndStats(res.data.activity_items);
     } catch (err) {
       console.log('initActivityItems failed', err);
     }
   },
 
+  // Mark item as completed
   handleCompleteItem(e) {
     const { activityID } = this.data;
     const itemID = e.currentTarget.dataset.index;
     this.updateActivityItem(activityID, itemID, 'completed');
   },
 
+  // Mark item as uncompleted
   handleUncompleteItem(e) {
     const { activityID } = this.data;
     const itemID = e.currentTarget.dataset.index;
     this.updateActivityItem(activityID, itemID, '');
   },
 
+  // Mark item as deleted
   handleDeleteItem(e) {
     const { activityID } = this.data;
     const itemID = e.currentTarget.dataset.index;
     this.updateActivityItem(activityID, itemID, 'deleted');
   },
 
+  // Restore deleted item
   handleUndeleteItem(e) {
     const { activityID } = this.data;
     const itemID = e.currentTarget.dataset.index;
     this.updateActivityItem(activityID, itemID, '');
   },
 
+  // Update item status on server
   async updateActivityItem(activityID, itemID, itemStatus) {
     try {
       const res = await requestWithLoading({
@@ -224,16 +211,13 @@ Page({
         }
       });
       console.log('updateActivityItem success', res);
-      this.setData({
-        items: res.data.activity_items
-      }, () => {
-        this.calculateStats();
-      });
+      this.updateItemsAndStats(res.data.activity_items);
     } catch (err) {
       console.log('updateActivityItem failed', err);
     }
   },
 
+  // Completely delete item with confirmation
   handleDeleteItemCompletely(e) {
     const itemID = e.currentTarget.dataset.index;
     const itemName = e.currentTarget.dataset.name;
@@ -248,6 +232,7 @@ Page({
     });
   },
 
+  // Delete item from server
   async deleteActivityItem(activityID, itemID) {
     try {
       const res = await requestWithLoading({
@@ -258,22 +243,20 @@ Page({
         }
       });
       console.log('deleteActivityItem success', res);
-      this.setData({
-        items: res.data.activity_items
-      }, () => {
-        this.calculateStats();
-      });
+      this.updateItemsAndStats(res.data.activity_items);
     } catch (err) {
       console.log('deleteActivityItem failed', err);
     }
   },
 
+  // Handle new item input
   handleNewItemInput(e) {
     this.setData({
       newItemName: e.detail.value.trim()
     });
   },
 
+  // Add new item
   addNewItem() {
     const newItemName = this.data.newItemName;
     if (newItemName === '') {
@@ -282,6 +265,7 @@ Page({
     }
     this.addActivityItem(this.data.activityID, newItemName);
 
+    // Scroll to bottom after adding new item
     setTimeout(() => {
       wx.pageScrollTo({
         scrollTop: 9999,
@@ -290,6 +274,7 @@ Page({
     }, 100);
   },
 
+  // Add new item to server
   async addActivityItem(activityID, newItemName) {
     try {
       const res = await requestWithLoading({
@@ -301,14 +286,19 @@ Page({
         }
       });
       console.log('addActivityItem success', res);
-      this.setData({
-        items: res.data.activity_items,
-        newItemName: ''
-      }, () => {
-        this.calculateStats();
-      });
+      this.updateItemsAndStats(res.data.activity_items, '');
     } catch (err) {
       console.log('addActivityItem failed', err);
     }
   },
+
+  // Helper method to update items and recalculate stats
+  updateItemsAndStats(items, newItemName = '') {
+    this.setData({
+      items: items,
+      newItemName: newItemName
+    }, () => {
+      this.calculateStats();
+    });
+  }
 });

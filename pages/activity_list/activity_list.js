@@ -1,12 +1,15 @@
+const { requestWithLoading } = require('../../utils/utils');
 import { API } from '../../config';
 
 Page({
+  // Share to timeline
   onShareTimeline: function () {
     return {
       title: '点名签到小工具',
     };
   },
 
+  // Share to chat
   onShareAppMessage: function () {
     return {
       title: '点名签到小工具',
@@ -21,43 +24,46 @@ Page({
     sharedActivitiesExpanded: true
   },
 
+  // Page show lifecycle
   onShow() {
     console.log(wx.getStorageSync('weixinID'));
     this.getActivitiesFromServer();
   },
 
-  getActivitiesFromServer() {
-    wx.request({
-      url: API.getActivities(wx.getStorageSync('weixinID')),
-      method: 'GET',
-      success: (res) => {
-        console.log('getActivitiesFromServer success', res);
-        this.setData({
-          myActivities: res.data.my,
-          sharedActivities: res.data.shared,
-        });
-      },
-      fail: (err) => {
-        console.log('getActivitiesFromServer failed', err);
-        wx.showToast({ title: '从服务器获取数据失败', icon: 'none' });
-      }
-    });
+  // Fetch activities from server
+  async getActivitiesFromServer() {
+    try {
+      const res = await requestWithLoading({
+        url: API.getActivities(wx.getStorageSync('weixinID')),
+        method: 'GET',
+      });
+
+      console.log('getActivitiesFromServer success', res);
+      this.setData({
+        myActivities: res.data.my,
+        sharedActivities: res.data.shared,
+      });
+    } catch (err) {
+      console.log('getActivitiesFromServer failed', err);
+      // Error handling is done in requestWithLoading
+    }
   },
 
-  // 处理我创建的活动折叠/展开
+  // Toggle my activities section
   onMyActivitiesToggle(e) {
     this.setData({
       myActivitiesExpanded: !e.detail.isCollapsed
     });
   },
 
-  // 处理共享活动折叠/展开
+  // Toggle shared activities section
   onSharedActivitiesToggle(e) {
     this.setData({
       sharedActivitiesExpanded: !e.detail.isCollapsed
     });
   },
 
+  // Navigate to activity detail page
   navigateToActivity(e) {
     const activityID = e.currentTarget.dataset.id;
     wx.navigateTo({
@@ -65,6 +71,7 @@ Page({
     });
   },
 
+  // Delete activity with confirmation
   deleteActivity(e) {
     const index = e.currentTarget.dataset.index;
     const source = e.currentTarget.dataset.source;
@@ -82,33 +89,36 @@ Page({
     });
   },
 
-  deleteActivityFromServer(activityID, source) {
-    wx.request({
-      url: API.deleteActivity(activityID),
-      method: 'DELETE',
-      data: {
-        weixin_id: wx.getStorageSync('weixinID'),
-        source: source
-      },
-      success: (res) => {
-        console.log('deleteActivityFromServer success', res);
-        wx.showToast({ title: '删除成功', icon: 'success' });
-
-        if (source === 'shared') {
-          const sharedActivities = this.data.sharedActivities.filter(item => item.id !== activityID);
-          this.setData({ sharedActivities: sharedActivities });
-        } else if (source === 'my') {
-          const myActivities = this.data.myActivities.filter(item => item.id !== activityID);
-          this.setData({ myActivities: myActivities });
+  // Delete activity from server
+  async deleteActivityFromServer(activityID, source) {
+    try {
+      const res = await requestWithLoading({
+        url: API.deleteActivity(activityID),
+        method: 'DELETE',
+        data: {
+          weixin_id: wx.getStorageSync('weixinID'),
+          source: source
         }
-      },
-      fail: (err) => {
-        console.log('deleteActivityFromServer failed', err);
-        wx.showToast({ title: '删除失败', icon: 'none' });
+      });
+
+      console.log('deleteActivityFromServer success', res);
+      wx.showToast({ title: '删除成功', icon: 'success' });
+
+      // Update local data after deletion
+      if (source === 'shared') {
+        const sharedActivities = this.data.sharedActivities.filter(item => item.id !== activityID);
+        this.setData({ sharedActivities: sharedActivities });
+      } else if (source === 'my') {
+        const myActivities = this.data.myActivities.filter(item => item.id !== activityID);
+        this.setData({ myActivities: myActivities });
       }
-    });
+    } catch (err) {
+      console.log('deleteActivityFromServer failed', err);
+      // Error handling is done in requestWithLoading
+    }
   },
 
+  // Navigate to create new activity page
   createNewActivity() {
     wx.navigateTo({
       url: '/pages/activity_create/activity_create'
