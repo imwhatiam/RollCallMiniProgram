@@ -17,7 +17,7 @@
     </view>
   </block>
 
-  <block wx:if="{{currentUserPermission=='creator'}}">
+  <block wx:elif="{{currentUserPermission=='creator'}}">
     <view class="header">
       <block wx:if="{{isEditingTitle}}">
         <input class="name-input"
@@ -137,7 +137,7 @@
     </view>
   </block>
 
-  <block wx:if="{{currentUserPermission=='admin'}}">
+  <block wx:elif="{{currentUserPermission=='admin'}}">
     <view class="header">
       <view class="name-display">
         {{title}}
@@ -197,7 +197,7 @@
     </view>
   </block>
 
-  <block wx:if="{{currentUserPermission==''}}">
+  <block wx:elif="{{currentUserPermission==''}}">
     <view class="header">
       <view class="name-display">
         {{title}}
@@ -239,4 +239,3 @@
     </view>
   </block>
 </view>
-
