@@ -41,6 +41,16 @@
   color: #333;
 }
 
+.copy-btn {
+  background: blue;
+  color: white;
+  font-size: 14px;
+  line-height: 1.4;
+  padding: 6px 12px;
+  margin-right: 10px;
+  border-radius: 4px;
+}
+
 .delete-btn {
   background: #F44336;
   color: white;

@@ -60,7 +60,7 @@
   justify-content: flex-end;
 }
 
-.refresh-btn, .init-btn {
+.refresh-btn, .init-btn, .set-admin-btn {
   background: blue;
   color: white;
   font-size: 14px;

@@ -20,8 +20,7 @@ Page({
   data: {
     myActivities: [],
     sharedActivities: [],
-    myActivitiesExpanded: true,
-    sharedActivitiesExpanded: true
+    publicActivities: [],
   },
 
   // Page show lifecycle
@@ -42,6 +41,7 @@ Page({
       this.setData({
         myActivities: res.data.my,
         sharedActivities: res.data.shared,
+        publicActivities: res.data.public
       });
     } catch (err) {
       console.log('getActivitiesFromServer failed', err);
@@ -53,20 +53,6 @@ Page({
     }
   },
 
-  // Toggle my activities section
-  onMyActivitiesToggle(e) {
-    this.setData({
-      myActivitiesExpanded: !e.detail.isCollapsed
-    });
-  },
-
-  // Toggle shared activities section
-  onSharedActivitiesToggle(e) {
-    this.setData({
-      sharedActivitiesExpanded: !e.detail.isCollapsed
-    });
-  },
-
   // Navigate to activity detail page
   navigateToActivity(e) {
     const activityID = e.currentTarget.dataset.id;
@@ -75,19 +61,55 @@ Page({
     });
   },
 
+  copyActivity(e) {
+    const activityID = e.currentTarget.dataset.id;
+    this.copyActivityToMy(activityID);
+  },
+
+  async copyActivityToMy(activityID) {
+    try {
+      const res = await requestWithLoading({
+        url: API.copyActivityToMy(activityID),
+        method: 'POST',
+        data: {
+          weixin_id: wx.getStorageSync('weixinID'),
+        }
+      });
+      console.log('copyActivityToMy success', res);
+      wx.showToast({
+        title: '复制成功',
+        icon: 'success',
+        duration: 2000
+      });
+      this.setData({
+        myActivities: res.data.my,
+        sharedActivities: res.data.shared,
+        publicActivities: res.data.public
+      });
+    } catch (err) {
+      console.log('copyActivityToMy failed', err);
+      wx.showToast({
+        title: (err && err.message) ? err.message : '请求失败',
+        icon: 'none',
+        duration: 2000
+      });
+    }
+  },
+
   // Delete activity with confirmation
   deleteActivity(e) {
-    const index = e.currentTarget.dataset.index;
+    const activityID = e.currentTarget.dataset.id;
+    const title = e.currentTarget.dataset.title;
     const source = e.currentTarget.dataset.source;
-    const activities = source === 'my' ? this.data.myActivities : this.data.sharedActivities;
-    const name = activities[index].activity_title;
+
+    console.log('deleteActivity', activityID, title, source);
 
     wx.showModal({
       title: '确认删除',
-      content: '确定要删除 ' + name + ' 吗？',
+      content: '确定要删除 ' + title + ' 吗？',
       success: res => {
         if (res.confirm) {
-          this.deleteActivityFromServer(activities[index].id, source);
+          this.deleteActivityFromServer(activityID, source);
         }
       }
     });
@@ -106,7 +128,11 @@ Page({
       });
 
       console.log('deleteActivityFromServer success', res);
-      wx.showToast({ title: '删除成功', icon: 'success' });
+      wx.showToast({
+        title: '删除成功',
+        icon: 'success',
+        duration: 2000
+      });
 
       // Update local data after deletion
       if (source === 'shared') {

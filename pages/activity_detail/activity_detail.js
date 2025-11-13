@@ -13,10 +13,12 @@ Page({
 
   data: {
     currentUserWeixinID: '',
+    currentUserPermission: '',
+
     activityID: '',
+    activityType: '',
     title: '',
     items: [],
-    creatorWeixinID: '',
     isEditingTitle: false,
     newItemName: '',
     showFullTextIndex: '',
@@ -38,7 +40,10 @@ Page({
     } else {
       if (activityID) {
         this.getActivityFromServer(parseInt(activityID));
-        this.setData({ currentUserWeixinID: wx.getStorageSync('weixinID') });
+        this.setData({
+          activityID: activityID,
+          currentUserWeixinID: wx.getStorageSync('weixinID'),
+        });
       } else {
         wx.showToast({
           title: `活动ID无效: ${activityID}`,
@@ -57,7 +62,19 @@ Page({
         method: 'GET',
       });
       console.log('getActivityFromServer success', res);
-      this.updateActivityData(res.data, activityID);
+
+      const user = res.data.white_list.find(item => item.weixin_id === wx.getStorageSync('weixinID'));
+      const permission = user ? user.permission : '';
+
+      this.setData({
+        currentUserPermission: permission,
+        activityType: res.data.activity_type,
+        title: res.data.activity_title,
+        items: res.data.activity_items,
+        whiteList: res.data.white_list,
+      }, () => {
+        this.calculateStats();
+      });
     } catch (err) {
       console.log('getActivityFromServer failed', err);
       const toastDuration = 2000;
@@ -68,7 +85,7 @@ Page({
           duration: toastDuration
         });
         setTimeout(() => {
-          wx.reLaunch({ url: '/pages/index/index' });
+          wx.navigateTo({ url: '/pages/index/index' });
         }, toastDuration);
 
         return;
@@ -79,20 +96,6 @@ Page({
         duration: 2000
       });
     }
-  },
-
-  // Update activity data and calculate stats
-  updateActivityData(activityData, activityID) {
-    this.setData({
-      activityID,
-      creatorWeixinID: activityData.creator_weixin_id,
-      title: activityData.activity_title,
-      items: activityData.activity_items,
-      whiteList: activityData.white_list,
-      isEditingTitle: false
-    }, () => {
-      this.calculateStats();
-    });
   },
 
   // Start editing title
@@ -107,9 +110,13 @@ Page({
 
   // Save title changes
   saveTitle() {
-    const { title, activityID } = this.data;
+    const { activityID, title } = this.data;
     if (!title.trim()) {
-      wx.showToast({ title: '活动/事项名称不能为空', icon: 'none' });
+      wx.showToast({
+        title: '活动/事项名称不能为空',
+        icon: 'none',
+        duration: 2000
+      });
       return;
     }
     this.setData({ isEditingTitle: false });
@@ -130,6 +137,43 @@ Page({
       console.log('updateTitle success', res);
     } catch (err) {
       console.log('updateTitle failed', err);
+      wx.showToast({
+        title: (err && err.message) ? err.message : '请求失败',
+        icon: 'none',
+        duration: 2000
+      });
+    }
+  },
+
+  setAdmin(e) {
+    const { activityID } = this.data;
+    const weixinID = e.currentTarget.dataset.id;
+    this.updateWhiteList(activityID, weixinID, 'admin');
+  },
+
+  unsetAdmin(e) {
+    const { activityID } = this.data;
+    const weixinID = e.currentTarget.dataset.id;
+    this.updateWhiteList(activityID, weixinID, '');
+  },
+
+  async updateWhiteList(activityID, weixinID, permission) {
+    try {
+      const res = await requestWithLoading({
+        url: API.updateWhiteList(activityID),
+        method: 'PUT',
+        data: {
+          weixin_id: wx.getStorageSync('weixinID'),
+          white_list: {
+            weixin_id: weixinID,
+            permission: permission
+          }
+        }
+      });
+      console.log('updateWhiteList success', res);
+      this.setData({ whiteList: res.data.white_list });
+    } catch (err) {
+      console.log('updateWhiteList failed', err);
       wx.showToast({
         title: (err && err.message) ? err.message : '请求失败',
         icon: 'none',
@@ -173,8 +217,8 @@ Page({
   // Initialize all items (reset status)
   initItems() {
     wx.showModal({
-      title: '初始化所有人员',
-      content: '确定将所有人员都初始化为未签到吗？',
+      title: '初始化所有项',
+      content: '确定将所有项都初始化为未完成吗？',
       success: res => {
         if (res.confirm) {
           this.initActivityItems(this.data.activityID);
@@ -197,6 +241,39 @@ Page({
       this.updateItemsAndStats(res.data.activity_items);
     } catch (err) {
       console.log('initActivityItems failed', err);
+      wx.showToast({
+        title: (err && err.message) ? err.message : '请求失败',
+        icon: 'none',
+        duration: 2000
+      });
+    }
+  },
+
+  copyActivity(e) {
+    const { activityID } = this.data;
+    this.copyActivityToMy(activityID);
+  },
+
+  async copyActivityToMy(activityID) {
+    try {
+      const res = await requestWithLoading({
+        url: API.copyActivityToMy(activityID),
+        method: 'POST',
+        data: {
+          weixin_id: wx.getStorageSync('weixinID'),
+        }
+      });
+      console.log('copyActivityToMy success', res);
+      wx.showToast({
+        title: '复制成功',
+        icon: 'success',
+        duration: 2000
+      });
+      setTimeout(() => {
+        wx.reLaunch({ url: '/pages/activity_list/activity_list' });
+      }, 2000);
+    } catch (err) {
+      console.log('copyActivityToMy failed', err);
       wx.showToast({
         title: (err && err.message) ? err.message : '请求失败',
         icon: 'none',

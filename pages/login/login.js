@@ -50,7 +50,7 @@ Page({
 
   navigateToActivityList() {
     console.log('nav to activity list')
-    wx.navigateTo({
+    wx.reLaunch({
       url: `/pages/activity_list/activity_list`
     })
   },
@@ -71,7 +71,7 @@ Page({
           hasUserInfo: true
         })
         if (this.data.redirect) {
-          wx.navigateTo({
+          wx.reLaunch({
             url: this.data.redirect,
           });
         } else {

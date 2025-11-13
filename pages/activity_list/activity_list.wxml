@@ -5,7 +5,6 @@
     <collapse-list
       title="我创建的"
       initiallyExpanded="{{true}}"
-      bindtoggle="onMyActivitiesToggle"
     >
       <block wx:for="{{myActivities}}" wx:key="id">
         <view class="list-item">
@@ -16,7 +15,8 @@
             <button
               class="delete-btn"
               bindtap="deleteActivity"
-              data-index="{{index}}"
+              data-id="{{item.id}}"
+              data-title="{{item.activity_title}}"
               data-source="my"
             >删除</button>
           </view>
@@ -27,7 +27,6 @@
     <collapse-list
       title="共享给我的"
       initiallyExpanded="{{true}}"
-      bindtoggle="onSharedActivitiesToggle"
     >
       <block wx:for="{{sharedActivities}}" wx:key="id">
         <view class="list-item">
@@ -36,15 +35,45 @@
           </view>
           <view class="action">
             <button
+              class="copy-btn"
+              bindtap="copyActivity"
+              data-id="{{item.id}}"
+            >另存</button>
+          </view>
+          <view class="action">
+            <button
               class="delete-btn"
               bindtap="deleteActivity"
-              data-index="{{index}}"
+              data-id="{{item.id}}"
+              data-title="{{item.activity_title}}"
               data-source="shared"
             >删除</button>
           </view>
         </view>
       </block>
     </collapse-list>
+
+    <!-- 公共清单 -->
+    <collapse-list
+      title="公共清单"
+      initiallyExpanded="{{true}}"
+    >
+      <block wx:for="{{publicActivities}}" wx:key="id">
+        <view class="list-item">
+          <view class="content" bindtap="navigateToActivity" data-id="{{item.id}}">
+            <text class="name">{{item.activity_title}}</text>
+          </view>
+          <view class="action">
+            <button
+              class="copy-btn"
+              bindtap="copyActivity"
+              data-id="{{item.id}}"
+            >另存</button>
+          </view>
+        </view>
+      </block>
+    </collapse-list>
+
   </view>
 
   <view class="bottom-view">

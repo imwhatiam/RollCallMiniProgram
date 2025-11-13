@@ -110,7 +110,7 @@ Page({
 
   // Navigate to activity detail page
   navigateToActivityDetail(activityID) {
-    wx.navigateTo({
+    wx.redirectTo({
       url: `/pages/activity_detail/activity_detail?activityID=${activityID}`
     });
   },
@@ -126,7 +126,7 @@ Page({
     wx.showToast({
       title: errorMessage,
       icon: 'none',
-      duration: 3000
+      duration: 2000
     });
   },
 
@@ -163,7 +163,7 @@ Page({
           wx.showToast({
             title: '已清空',
             icon: 'success',
-            duration: 1500
+            duration: 2000
           });
         }
       }

@@ -1,7 +1,24 @@
 <home-button />
 <view class="container">
-  <view class="header">
-    <view wx:if="{{currentUserWeixinID===creatorWeixinID}}">
+
+  <block wx:if="{{activityType=='public'}}">
+    <view class="header">
+      <view class="name-display">
+        {{title}}
+      </view>
+    </view>
+    <button class="init-btn" bindtap="copyActivity">一键另存为我的</button>
+    <view class="activity-list-item">
+      <block wx:for="{{items}}" wx:key="index">
+        <view class="list-item">
+          <text class="item-text">{{index}}, {{item.name}}</text>
+        </view>
+      </block>
+    </view>
+  </block>
+
+  <block wx:if="{{currentUserPermission=='creator'}}">
+    <view class="header">
       <block wx:if="{{isEditingTitle}}">
         <input class="name-input"
               value="{{title}}"
@@ -15,89 +32,211 @@
         </view>
       </block>
     </view>
-    <view wx:else>
-       <view class="name-display">
-         {{title}}
-       </view>
-    </view>
-  </view>
 
-  <view wx:if="{{currentUserWeixinID===creatorWeixinID}}">
-    <button class="init-btn" bindtap="initItems">一键全部未签到</button>
-  </view>
-
-  <view class="stats-section">
-    <view class="stats-left">
-      <text class="stat-label">总计: {{totalCount}}</text>
-      <text class="stat-label">签到: {{checkedCount}}</text>
-      <text class="stat-label">取消: {{deletedCount}}</text>
-      <text class="stat-label">剩余: {{uncheckedCount}}</text>
-    </view>
-    <view class="stats-right">
-      <button class="refresh-btn" bindtap="refreshData">刷新</button>
-    </view>
-  </view>
-
-  <view class="activity-list-item">
-    <block wx:for="{{items}}" wx:key="index">
-      <view wx:if="{{item.status == 'completed'}}" class="list-item completed">
-        <view wx:if="{{item.operator_avatar_url}}" class="avatar-container">
-          <image class="operator-avatar" src="{{item.operator_avatar_url}}" mode="aspectFill"></image>
+    <collapse-list
+      title="所有访客"
+      initiallyExpanded="{{true}}"
+    >
+      <block wx:for="{{whiteList}}" wx:key="id">
+        <view class="list-item">
+          <view wx:if="{{item.avatar_url}}" class="avatar-container">
+            <image class="operator-avatar" src="{{item.avatar_url}}" mode="aspectFill"></image>
+          </view>
+          <block wx:if="{{item.permission === 'creator'}}">
+            <text class="item-text">创建者</text>
+          </block>
+          <block wx:if="{{item.permission === 'admin'}}">
+            <text class="item-text">管理员</text>
+            <view class="action">
+              <button
+                class="set-admin-btn"
+                bindtap="unsetAdmin"
+                data-id="{{item.weixin_id}}"
+              >取消管理员</button>
+            </view>
+          </block>
+          <block wx:if="{{item.permission === ''}}">
+            <text class="item-text">访客</text>
+            <view class="action">
+              <button
+                class="set-admin-btn"
+                bindtap="setAdmin"
+                data-id="{{item.weixin_id}}"
+              >设为管理员</button>
+            </view>
+          </block>
         </view>
+      </block>
+    </collapse-list>
 
-        <view wx:if="{{currentUserWeixinID===item.operator || currentUserWeixinID===creatorWeixinID}}">
+    <button class="init-btn" bindtap="initItems">一键全部未完成</button>
+
+    <view class="stats-section">
+      <view class="stats-left">
+        <text class="stat-label">总计: {{totalCount}}</text>
+        <text class="stat-label">完成: {{checkedCount}}</text>
+        <text class="stat-label">取消: {{deletedCount}}</text>
+        <text class="stat-label">剩余: {{uncheckedCount}}</text>
+      </view>
+      <view class="stats-right">
+        <button class="refresh-btn" bindtap="refreshData">刷新</button>
+      </view>
+    </view>
+
+    <view class="activity-list-item">
+      <block wx:for="{{items}}" wx:key="index">
+        <view wx:if="{{item.status == 'completed'}}" class="list-item completed">
+          <view wx:if="{{item.operator_avatar_url}}" class="avatar-container">
+            <image class="operator-avatar" src="{{item.operator_avatar_url}}" mode="aspectFill"></image>
+          </view>
           <button
             class="complete-btn"
             bindtap="handleUncompleteItem"
             data-index="{{index}}"
           >✓</button>
+          <text class="item-text">{{index}}, {{item.name}}</text>
         </view>
 
-        <text class="item-text">{{index}}, {{item.name}}</text>
-      </view>
-
-      <view wx:elif="{{item.status == 'deleted'}}" class="list-item deleted">
-        <view wx:if="{{item.operator_avatar_url}}" class="avatar-container">
-          <image class="operator-avatar" src="{{item.operator_avatar_url}}" mode="aspectFill"></image>
-        </view>
-        <text class="item-text">{{index}}, {{item.name}}</text>
-
-        <view wx:if="{{currentUserWeixinID===item.operator || currentUserWeixinID===creatorWeixinID}}" style="display: flex; flex-direction: row;">
+        <view wx:elif="{{item.status == 'deleted'}}" class="list-item deleted">
+          <view wx:if="{{item.operator_avatar_url}}" class="avatar-container">
+            <image class="operator-avatar" src="{{item.operator_avatar_url}}" mode="aspectFill"></image>
+          </view>
+          <text class="item-text">{{index}}, {{item.name}}</text>
           <button
             class="delete-btn"
             bindtap="handleUndeleteItem"
             data-index="{{index}}"
           >x</button>
-          <view wx:if="{{currentUserWeixinID===creatorWeixinID}}">
+          <button
+            class="delete-btn"
+            bindtap="handleDeleteItemCompletely"
+            data-index="{{index}}"
+            data-name="{{item.name}}"
+          >彻底删除</button>
+        </view>
+
+        <view wx:else class="list-item">
+          <view wx:if="{{item.operator_avatar_url}}" class="avatar-container">
+            <image class="operator-avatar" src="{{item.operator_avatar_url}}" mode="aspectFill"></image>
+          </view>
+          <button class="complete-btn" bindtap="handleCompleteItem" data-index="{{index}}">完成</button>
+          <text class="{{showFullTextIndex===index ? 'item-full-text' : 'item-text'}}" bindlongpress="showFullText" bindtouchend="hideFullText" data-index="{{index}}">{{index}}, {{item.name}}</text>
+          <block wx:if="{{showFullTextIndex!==index}}"> <button class="delete-btn" bindtap="handleDeleteItem" data-index="{{index}}">取消</button>
+          </block>
+        </view>
+      </block>
+    </view>
+    <view class="bottom-view">
+      <input
+        type="text"
+        placeholder="请输入新人员/子事项"
+        bindinput="handleNewItemInput"
+        value="{{newItemName}}"
+      />
+      <button class="create-save-update-btn" bindtap="addNewItem">添加</button>
+    </view>
+  </block>
+
+  <block wx:if="{{currentUserPermission=='admin'}}">
+    <view class="header">
+      <view class="name-display">
+        {{title}}
+      </view>
+    </view>
+    <button class="init-btn" bindtap="copyActivity">一键另存为我的</button>
+    <view class="stats-section">
+      <view class="stats-left">
+        <text class="stat-label">总计: {{totalCount}}</text>
+        <text class="stat-label">完成: {{checkedCount}}</text>
+        <text class="stat-label">取消: {{deletedCount}}</text>
+        <text class="stat-label">剩余: {{uncheckedCount}}</text>
+      </view>
+      <view class="stats-right">
+        <button class="refresh-btn" bindtap="refreshData">刷新</button>
+      </view>
+    </view>
+    <view class="activity-list-item">
+      <block wx:for="{{items}}" wx:key="index">
+        <view wx:if="{{item.status == 'completed'}}" class="list-item completed">
+          <view wx:if="{{item.operator_avatar_url}}" class="avatar-container">
+            <image class="operator-avatar" src="{{item.operator_avatar_url}}" mode="aspectFill"></image>
+          </view>
+          <view wx:if="{{currentUserWeixinID===item.operator}}">
+            <button
+              class="complete-btn"
+              bindtap="handleUncompleteItem"
+              data-index="{{index}}"
+            >✓</button>
+          </view>
+          <text class="item-text">{{index}}, {{item.name}}</text>
+        </view>
+        <view wx:elif="{{item.status == 'deleted'}}" class="list-item deleted">
+          <view wx:if="{{item.operator_avatar_url}}" class="avatar-container">
+            <image class="operator-avatar" src="{{item.operator_avatar_url}}" mode="aspectFill"></image>
+          </view>
+          <text class="item-text">{{index}}, {{item.name}}</text>
+
+          <view wx:if="{{currentUserWeixinID===item.operator}}" style="display: flex; flex-direction: row;">
             <button
               class="delete-btn"
-              bindtap="handleDeleteItemCompletely"
+              bindtap="handleUndeleteItem"
               data-index="{{index}}"
-              data-name="{{item.name}}"
-            >彻底删除</button>
+            >x</button>
           </view>
         </view>
-      </view>
-
-      <view wx:else class="list-item">
-        <view wx:if="{{item.operator_avatar_url}}" class="avatar-container">
-          <image class="operator-avatar" src="{{item.operator_avatar_url}}" mode="aspectFill"></image>
+        <view wx:else class="list-item">
+          <view wx:if="{{item.operator_avatar_url}}" class="avatar-container">
+            <image class="operator-avatar" src="{{item.operator_avatar_url}}" mode="aspectFill"></image>
+          </view>
+          <button class="complete-btn" bindtap="handleCompleteItem" data-index="{{index}}">完成</button>
+          <text class="{{showFullTextIndex===index ? 'item-full-text' : 'item-text'}}" bindlongpress="showFullText" bindtouchend="hideFullText" data-index="{{index}}">{{index}}, {{item.name}}</text>
+          <block wx:if="{{showFullTextIndex!==index}}"> <button class="delete-btn" bindtap="handleDeleteItem" data-index="{{index}}">取消</button>
+          </block>
         </view>
-        <button class="complete-btn" bindtap="handleCompleteItem" data-index="{{index}}">签到</button>
-        <text class="{{showFullTextIndex===index ? 'item-full-text' : 'item-text'}}" bindlongpress="showFullText" bindtouchend="hideFullText" data-index="{{index}}">{{index}}, {{item.name}}</text>
-        <block wx:if="{{showFullTextIndex!==index}}"> <button class="delete-btn" bindtap="handleDeleteItem" data-index="{{index}}">取消</button>
-        </block>
-      </view>
-    </block>
-  </view>
+      </block>
+    </view>
+  </block>
 
-  <view wx:if="{{currentUserWeixinID===creatorWeixinID}}" class="bottom-view">
-    <input
-      type="text"
-      placeholder="请输入新人员/子事项"
-      bindinput="handleNewItemInput"
-      value="{{newItemName}}"
-    />
-    <button class="create-save-update-btn" bindtap="addNewItem">添加</button>
-  </view>
+  <block wx:if="{{currentUserPermission==''}}">
+    <view class="header">
+      <view class="name-display">
+        {{title}}
+      </view>
+    </view>
+    <button class="init-btn" bindtap="copyActivity">一键另存为我的</button>
+    <view class="stats-section">
+      <view class="stats-left">
+        <text class="stat-label">总计: {{totalCount}}</text>
+        <text class="stat-label">完成: {{checkedCount}}</text>
+        <text class="stat-label">取消: {{deletedCount}}</text>
+        <text class="stat-label">剩余: {{uncheckedCount}}</text>
+      </view>
+      <view class="stats-right">
+        <button class="refresh-btn" bindtap="refreshData">刷新</button>
+      </view>
+    </view>
+    <view class="activity-list-item">
+      <block wx:for="{{items}}" wx:key="index">
+        <view wx:if="{{item.status == 'completed'}}" class="list-item completed">
+          <view wx:if="{{item.operator_avatar_url}}" class="avatar-container">
+            <image class="operator-avatar" src="{{item.operator_avatar_url}}" mode="aspectFill"></image>
+          </view>
+          <text class="item-text">{{index}}, {{item.name}}</text>
+        </view>
+        <view wx:elif="{{item.status == 'deleted'}}" class="list-item deleted">
+          <view wx:if="{{item.operator_avatar_url}}" class="avatar-container">
+            <image class="operator-avatar" src="{{item.operator_avatar_url}}" mode="aspectFill"></image>
+          </view>
+          <text class="item-text">{{index}}, {{item.name}}</text>
+        </view>
+        <view wx:else class="list-item">
+          <view wx:if="{{item.operator_avatar_url}}" class="avatar-container">
+            <image class="operator-avatar" src="{{item.operator_avatar_url}}" mode="aspectFill"></image>
+          </view>
+          <text class="{{showFullTextIndex===index ? 'item-full-text' : 'item-text'}}" bindlongpress="showFullText" bindtouchend="hideFullText" data-index="{{index}}">{{index}}, {{item.name}}</text>
+        </view>
+      </block>
+    </view>
+  </block>
 </view>
+
