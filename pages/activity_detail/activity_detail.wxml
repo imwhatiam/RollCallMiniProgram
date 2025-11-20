@@ -37,11 +37,12 @@
       title="所有访客"
       initiallyExpanded="{{true}}"
     >
-      <block wx:for="{{whiteList}}" wx:key="id">
+      <block wx:for="{{whiteList}}" wx:key="index">
         <view class="list-item">
           <view wx:if="{{item.avatar_url}}" class="avatar-container">
             <image class="operator-avatar" src="{{item.avatar_url}}" mode="aspectFill"></image>
           </view>
+          <text>{{index}}</text>
           <block wx:if="{{item.permission === 'creator'}}">
             <text class="item-text">创建者</text>
           </block>
