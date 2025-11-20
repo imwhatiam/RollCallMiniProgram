@@ -50,10 +50,14 @@
   transition: max-height 0.3s ease;
 }
 
+/* 展开时允许最高 200px，并可滚动 */
 .collapse-content.expanded {
-  max-height: 2000px;
+  max-height: 200px;
+  overflow-y: auto;
 }
 
+/* 折叠时高度为 0 */
 .collapse-content.collapsed {
   max-height: 0;
+  overflow: hidden;
 }

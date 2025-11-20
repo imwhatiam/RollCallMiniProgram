@@ -3,6 +3,14 @@ import { requestWithLoading } from '../../utils/utils';
 
 Page({
 
+  // Share to timeline
+  onShareTimeline: function () {
+    return {
+      title: this.data.title,
+      path: `/pages/activity_detail/activity_detail?activityID=${this.data.activityID}`,
+    };
+  },
+
   // Share activity
   onShareAppMessage: function () {
     return {
