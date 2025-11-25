@@ -121,9 +121,8 @@
             <image class="operator-avatar" src="{{item.operator_avatar_url}}" mode="aspectFill"></image>
           </view>
           <button class="complete-btn" bindtap="handleCompleteItem" data-index="{{index}}">完成</button>
-          <text class="{{showFullTextIndex===index ? 'item-full-text' : 'item-text'}}" bindlongpress="showFullText" bindtouchend="hideFullText" data-index="{{index}}">{{index}}, {{item.name}}</text>
-          <block wx:if="{{showFullTextIndex!==index}}"> <button class="delete-btn" bindtap="handleDeleteItem" data-index="{{index}}">取消</button>
-          </block>
+          <text class="item-text" bindlongpress="showItemDetail" data-index="{{index}}">{{index}}, {{item.name}}</text>
+          <button class="delete-btn" bindtap="handleDeleteItem" data-index="{{index}}">取消</button>
         </view>
       </block>
     </view>
@@ -190,9 +189,8 @@
             <image class="operator-avatar" src="{{item.operator_avatar_url}}" mode="aspectFill"></image>
           </view>
           <button class="complete-btn" bindtap="handleCompleteItem" data-index="{{index}}">完成</button>
-          <text class="{{showFullTextIndex===index ? 'item-full-text' : 'item-text'}}" bindlongpress="showFullText" bindtouchend="hideFullText" data-index="{{index}}">{{index}}, {{item.name}}</text>
-          <block wx:if="{{showFullTextIndex!==index}}"> <button class="delete-btn" bindtap="handleDeleteItem" data-index="{{index}}">取消</button>
-          </block>
+          <text class="item-text" bindlongpress="showItemDetail" data-index="{{index}}">{{index}}, {{item.name}}</text>
+          <button class="delete-btn" bindtap="handleDeleteItem" data-index="{{index}}">取消</button>
         </view>
       </block>
     </view>
@@ -234,9 +232,25 @@
           <view wx:if="{{item.operator_avatar_url}}" class="avatar-container">
             <image class="operator-avatar" src="{{item.operator_avatar_url}}" mode="aspectFill"></image>
           </view>
-          <text class="{{showFullTextIndex===index ? 'item-full-text' : 'item-text'}}" bindlongpress="showFullText" bindtouchend="hideFullText" data-index="{{index}}">{{index}}, {{item.name}}</text>
+          <text class="item-text" bindlongpress="showItemDetail" data-index="{{index}}">{{index}}, {{item.name}}</text>
         </view>
       </block>
     </view>
   </block>
+  <view wx:if="{{showItemDetail}}" class="modal">
+    <view class="modal-content">
+      <block wx:for="{{modalItems}}" wx:key="index">
+        <view>
+          <text
+            wx:if="{{item.isPhone}}"
+            class="phone-link"
+            bindtap="makePhoneCall"
+            data-phone="{{item.text}}"
+          >{{item.text}}</text>
+          <text wx:else>{{item.text}}</text>
+        </view>
+      </block>
+      <button class="init-btn" bindtap="closeModal">关闭</button>
+    </view>
+  </view>
 </view>

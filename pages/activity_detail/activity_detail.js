@@ -29,11 +29,13 @@ Page({
     items: [],
     isEditingTitle: false,
     newItemName: '',
-    showFullTextIndex: '',
     totalCount: 0,
     checkedCount: 0,
     deletedCount: 0,
     uncheckedCount: 0,
+
+    showItemDetail: false,
+    modalItems: [],
   },
 
   // Page load lifecycle
@@ -191,14 +193,29 @@ Page({
   },
 
   // Show full text of item
-  showFullText(e) {
+  showItemDetail(e) {
     const index = e.currentTarget.dataset.index;
-    this.setData({ showFullTextIndex: index });
+    const item = this.data.items[index];
+    const name = item.name;
+    const parts = name.split(/[\s,]+/).filter(p => p.trim() !== '');
+    this.setData({
+      showItemDetail: true,
+      modalItems: parts.map(part => ({
+        text: part,
+        isPhone: /^1[3-9]\d{9}$/.test(part)
+      })),
+    });
   },
 
-  // Hide full text
-  hideFullText() {
-    this.setData({ showFullTextIndex: '' });
+  closeModal() {
+    this.setData({ showItemDetail: false });
+  },
+
+  makePhoneCall(e) {
+    const phone = e.currentTarget.dataset.phone;
+    wx.makePhoneCall({
+      phoneNumber: phone
+    });
   },
 
   // Calculate activity statistics
