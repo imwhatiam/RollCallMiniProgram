@@ -82,6 +82,10 @@ function createWxStub() {
     __loginCode: 'code-from-wx-login',
     /** 设置后 wx.login 走 fail */
     __loginFail: null,
+    /** getFileSystemManager().readFile 返回的内容 */
+    __fileContent: 'BASE64-AVATAR-CONTENT',
+    /** 设置后 readFile 走 fail */
+    __readFileFail: null,
     /** showModal 点确定还是取消 */
     __modalConfirm: true,
     /** wx.canIUse 的返回值 */
@@ -192,6 +196,19 @@ function createWxStub() {
     }
     if (typeof options.success === 'function') options.success({ code: wx.__loginCode });
   };
+
+  wx.getFileSystemManager = () => ({
+    readFile: (options) => {
+      calls.push({ name: 'readFile', args: [options] });
+      if (wx.__readFileFail) {
+        if (typeof options.fail === 'function') options.fail(wx.__readFileFail);
+        return;
+      }
+      if (typeof options.success === 'function') {
+        options.success({ data: wx.__fileContent });
+      }
+    },
+  });
 
   return wx;
 }

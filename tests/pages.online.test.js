@@ -97,118 +97,229 @@ test('登录页：已登录时 onLoad 直接进活动列表', () => {
   assert.equal(wx.lastCall('reLaunch').url, '/pages/activity_list/activity_list');
 });
 
-test('登录页：选头像后先 wx.login 再上传 code + 头像', () => {
+test('登录页：选头像后走 readFile + wx.request，不再用 wx.uploadFile', async () => {
   const { page, wx } = loadPage('pages/login/login.js');
   wx.__loginCode = 'code-xyz';
+  wx.__fileContent = 'BASE64-AVATAR';
+  wx.__response = { statusCode: 200, data: { weixin_id: 'openid-1' } };
 
   page.onChooseAvatar({ detail: { avatarUrl: 'wxfile://tmp-avatar.png' } });
 
-  const upload = wx.lastCall('uploadFile');
-  assert.equal(upload.filePath, 'wxfile://tmp-avatar.png');
-  assert.equal(upload.name, 'avatar');
-  assert.equal(upload.formData.code, 'code-xyz');
-  assert.ok(upload.url.endsWith('/jscode2session/'));
+  // 读文件是同步触发的
+  const read = wx.lastCall('readFile');
+  assert.equal(read.filePath, 'wxfile://tmp-avatar.png');
+  assert.equal(read.encoding, 'base64');
+
+  await tick();
+
+  const sent = wx.lastCall('request');
+  assert.equal(sent.method, 'POST');
+  assert.ok(sent.url.endsWith('/jscode2session/'));
+  assert.equal(sent.header['content-type'], 'application/json');
+  assert.equal(sent.data.code, 'code-xyz');
+  assert.equal(sent.data.avatar_base64, 'BASE64-AVATAR');
+  assert.equal(sent.data.avatar_ext, 'png');
+
+  // 这就是这次改动的核心：彻底不碰 uploadFile
+  assert.equal(wx.calledWith('uploadFile'), false);
 });
 
-test('登录页：上传成功写入 weixinID 并回到 redirect', () => {
+test('登录页：从临时文件路径里取图片后缀', async () => {
+  const { page, wx } = loadPage('pages/login/login.js');
+  wx.__response = { statusCode: 200, data: { weixin_id: 'x' } };
+
+  page.onChooseAvatar({ detail: { avatarUrl: 'wxfile://tmp-a.jpeg' } });
+  await tick();
+
+  assert.equal(wx.lastCall('request').data.avatar_ext, 'jpeg');
+});
+
+test('登录页：路径里没有后缀时按 jpeg 提交', async () => {
+  const { page, wx } = loadPage('pages/login/login.js');
+  wx.__response = { statusCode: 200, data: { weixin_id: 'x' } };
+
+  page.onChooseAvatar({ detail: { avatarUrl: 'http://tmp/abc123' } });
+  await tick();
+
+  assert.equal(wx.lastCall('request').data.avatar_ext, 'jpeg');
+});
+
+test('登录页：后缀不在白名单里时也按 jpeg 提交', async () => {
+  const { page, wx } = loadPage('pages/login/login.js');
+  wx.__response = { statusCode: 200, data: { weixin_id: 'x' } };
+
+  page.onChooseAvatar({ detail: { avatarUrl: 'wxfile://tmp-a.heic' } });
+  await tick();
+
+  assert.equal(wx.lastCall('request').data.avatar_ext, 'jpeg');
+});
+
+test('登录页：登录成功写入 weixinID 并回到 redirect', async () => {
   const { page, wx } = loadPage('pages/login/login.js');
   page.onLoad({ redirect: encodeURIComponent('/pages/activity_detail/activity_detail?activityID=9') });
-  wx.__uploadResponse = {
-    statusCode: 200,
-    data: JSON.stringify({ weixin_id: 'openid-9', avatar_url: 'https://cdn/a.png' }),
-  };
+  wx.__response = { statusCode: 200, data: { weixin_id: 'openid-9', avatar_url: 'https://cdn/a.png' } };
 
   page.onChooseAvatar({ detail: { avatarUrl: 'wxfile://tmp.png' } });
+  await tick();
 
   assert.equal(wx.getStorageSync('weixinID'), 'openid-9');
   assert.equal(page.data.hasUserInfo, true);
   assert.equal(wx.lastCall('reLaunch').url, '/pages/activity_detail/activity_detail?activityID=9');
 });
 
-test('登录页：上传成功但没有 redirect 时回活动列表', () => {
+test('登录页：登录成功但没有 redirect 时回活动列表', async () => {
   const { page, wx } = loadPage('pages/login/login.js');
   page.onLoad({});
-  wx.__uploadResponse = { statusCode: 200, data: JSON.stringify({ weixin_id: 'openid-1' }) };
+  wx.__response = { statusCode: 200, data: { weixin_id: 'openid-1' } };
 
   page.onChooseAvatar({ detail: { avatarUrl: 'wxfile://tmp.png' } });
+  await tick();
 
   assert.equal(wx.lastCall('reLaunch').url, '/pages/activity_list/activity_list');
 });
 
-test('登录页：HTTP 非 2xx 时提示且不写 storage', () => {
+test('登录页：HTTP 非 2xx 时提示且不写 storage', async () => {
   const { page, wx } = loadPage('pages/login/login.js');
-  wx.__uploadResponse = { statusCode: 502, data: JSON.stringify({ error: '网关错误' }) };
+  wx.__response = { statusCode: 502, data: { error: '网关错误' } };
 
   page.onChooseAvatar({ detail: { avatarUrl: 'wxfile://tmp.png' } });
+  await tick();
 
   assert.equal(wx.getStorageSync('weixinID'), '');
   assert.equal(wx.lastCall('showToast').title, '网关错误');
   assert.equal(wx.calledWith('reLaunch'), false);
 });
 
-test('登录页：HTTP 非 2xx 且无 error 文案时带上状态码', () => {
+test('登录页：HTTP 非 2xx 且无 error 文案时带上状态码', async () => {
   const { page, wx } = loadPage('pages/login/login.js');
-  wx.__uploadResponse = { statusCode: 500, data: JSON.stringify({ detail: 'oops' }) };
+  wx.__response = { statusCode: 500, data: { detail: 'oops' } };
 
   page.onChooseAvatar({ detail: { avatarUrl: 'wxfile://tmp.png' } });
+  await tick();
 
   assert.equal(wx.lastCall('showToast').title, '登录失败 (500)');
 });
 
-test('登录页：HTTP 非 2xx 且返回不是 JSON 时给通用文案', () => {
+test('登录页：HTTP 非 2xx 且返回不是 JSON 时给通用文案', async () => {
   const { page, wx } = loadPage('pages/login/login.js');
-  wx.__uploadResponse = { statusCode: 502, data: '<html>502 Bad Gateway</html>' };
+  wx.__response = { statusCode: 502, data: '<html>502 Bad Gateway</html>' };
 
   page.onChooseAvatar({ detail: { avatarUrl: 'wxfile://tmp.png' } });
+  await tick();
 
   assert.equal(wx.lastCall('showToast').title, '登录失败，请重试');
 });
 
-test('登录页：返回不是 JSON 时提示失败', () => {
+test('登录页：返回不是 JSON 时提示失败', async () => {
   const { page, wx } = loadPage('pages/login/login.js');
-  wx.__uploadResponse = { statusCode: 200, data: '<html>502 Bad Gateway</html>' };
+  wx.__response = { statusCode: 200, data: '<html>502 Bad Gateway</html>' };
 
   page.onChooseAvatar({ detail: { avatarUrl: 'wxfile://tmp.png' } });
+  await tick();
 
   assert.equal(wx.getStorageSync('weixinID'), '');
   assert.equal(wx.lastCall('showToast').title, '登录失败，请重试');
 });
 
-test('登录页：返回缺少 weixin_id 时提示失败', () => {
+test('登录页：返回缺少 weixin_id 时提示失败', async () => {
   const { page, wx } = loadPage('pages/login/login.js');
-  wx.__uploadResponse = { statusCode: 200, data: JSON.stringify({ nickname: '' }) };
+  wx.__response = { statusCode: 200, data: { nickname: '' } };
 
   page.onChooseAvatar({ detail: { avatarUrl: 'wxfile://tmp.png' } });
+  await tick();
 
   assert.equal(wx.getStorageSync('weixinID'), '');
   assert.equal(wx.lastCall('showToast').title, '登录失败，请重试');
 });
 
-test('登录页：上传失败提示检查网络', () => {
+test('登录页：请求失败时把微信的 errMsg 原样弹出来', async () => {
   const { page, wx } = loadPage('pages/login/login.js');
-  wx.__uploadFail = { errMsg: 'uploadFile:fail' };
+  wx.__requestFail = { errMsg: 'request:fail something nobody mapped' };
 
   page.onChooseAvatar({ detail: { avatarUrl: 'wxfile://tmp.png' } });
+  await tick();
+
+  const modal = wx.lastCall('showModal');
+  assert.equal(modal.title, '登录失败');
+  assert.equal(modal.content, 'request:fail something nobody mapped');
+  assert.equal(modal.showCancel, false);
+  assert.equal(wx.calledWith('reLaunch'), false);
+  assert.equal(wx.getStorageSync('weixinID'), '');
+});
+
+test('登录页：域名没配白名单时给一句中文人话，并保留原文', async () => {
+  const { page, wx } = loadPage('pages/login/login.js');
+  wx.__requestFail = { errMsg: 'request:fail url not in domain list' };
+
+  page.onChooseAvatar({ detail: { avatarUrl: 'wxfile://tmp.png' } });
+  await tick();
+
+  const content = wx.lastCall('showModal').content;
+  assert.ok(content.includes('服务器域名'), content);
+  assert.ok(content.includes('request:fail url not in domain list'), content);
+});
+
+test('登录页：隐私协议未声明时也给中文人话', async () => {
+  const { page, wx } = loadPage('pages/login/login.js');
+  wx.__requestFail = {
+    errMsg: 'request:fail api scope is not declared in the privacy agreement',
+  };
+
+  page.onChooseAvatar({ detail: { avatarUrl: 'wxfile://tmp.png' } });
+  await tick();
+
+  assert.ok(wx.lastCall('showModal').content.includes('用户隐私保护指引'));
+});
+
+test('登录页：读头像文件失败时也要给出原因', async () => {
+  const { page, wx } = loadPage('pages/login/login.js');
+  wx.__readFileFail = { errMsg: 'readFile:fail no such file or directory' };
+
+  page.onChooseAvatar({ detail: { avatarUrl: 'wxfile://gone.png' } });
+  await tick();
+
+  assert.equal(wx.calledWith('request'), false);
+  assert.ok(wx.lastCall('showModal').content.includes('readFile:fail'));
+});
+
+test('登录页：拿不到 errMsg 时退回通用文案', async () => {
+  const { page, wx } = loadPage('pages/login/login.js');
+  wx.__requestFail = {};
+
+  page.onChooseAvatar({ detail: { avatarUrl: 'wxfile://tmp.png' } });
+  await tick();
 
   assert.equal(wx.lastCall('showToast').title, '登录失败，请检查网络');
-  assert.equal(wx.calledWith('reLaunch'), false);
+  assert.equal(wx.calledWith('showModal'), false);
 });
 
-test('登录页：wx.login 失败要提示用户', () => {
+test('登录页：chooseAvatar 没给出 avatarUrl 时不发任何请求', () => {
+  const { page, wx } = loadPage('pages/login/login.js');
+
+  page.onChooseAvatar({ detail: {} });
+
+  assert.equal(wx.calledWith('readFile'), false);
+  assert.equal(wx.calledWith('login'), false);
+  assert.equal(wx.lastCall('showToast').title, '没有取到微信头像，请重试');
+});
+
+test('登录页：wx.login 失败要提示用户且不读文件', () => {
   const { page, wx } = loadPage('pages/login/login.js');
   wx.__loginFail = { errMsg: 'login:fail' };
 
   page.onChooseAvatar({ detail: { avatarUrl: 'wxfile://tmp.png' } });
 
   assert.equal(wx.lastCall('showToast').title, '登录失败，请重试');
-  assert.equal(wx.calledWith('uploadFile'), false);
+  assert.equal(wx.calledWith('readFile'), false);
+  assert.equal(wx.calledWith('request'), false);
 });
 
-test('登录页：上传过程中会显示 loading 并收掉', () => {
+test('登录页：过程中会显示 loading 并收掉', async () => {
   const { page, wx } = loadPage('pages/login/login.js');
-  wx.__uploadResponse = { statusCode: 200, data: JSON.stringify({ weixin_id: 'openid-1' }) };
+  wx.__response = { statusCode: 200, data: { weixin_id: 'openid-1' } };
 
   page.onChooseAvatar({ detail: { avatarUrl: 'wxfile://tmp.png' } });
+  await tick();
 
   assert.ok(wx.calledWith('showLoading'));
   assert.ok(wx.calledWith('hideLoading'));
