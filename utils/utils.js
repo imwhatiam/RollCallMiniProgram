@@ -14,6 +14,37 @@ const formatNumber = n => {
   return n[1] ? n : `0${n}`
 }
 
+const WEIXIN_ID_STORAGE_KEY = 'weixinID'
+
+const LOGIN_PAGE = '/pages/login/login'
+
+/**
+ * 读取当前登录态里的 weixin_id。
+ * storage 里没有这个 key 时 wx.getStorageSync 返回空字符串，
+ * 这里再兜一层 null / undefined，保证返回值一定是字符串。
+ */
+const getWeixinID = () => wx.getStorageSync(WEIXIN_ID_STORAGE_KEY) || ''
+
+const setWeixinID = (weixinID) => {
+  wx.setStorageSync(WEIXIN_ID_STORAGE_KEY, weixinID || '')
+}
+
+const clearWeixinID = () => {
+  wx.removeStorageSync(WEIXIN_ID_STORAGE_KEY)
+}
+
+const isLoggedIn = () => getWeixinID() !== ''
+
+/**
+ * 拼登录页地址，redirect 是登录成功后要回跳的页面路径（可带参数）。
+ */
+const buildLoginUrl = (redirect) => {
+  if (!redirect) {
+    return LOGIN_PAGE
+  }
+  return `${LOGIN_PAGE}?redirect=${encodeURIComponent(redirect)}`
+}
+
 const requestWithLoading = (options) => {
   wx.showLoading({ title: '加载中...' });
   return new Promise((resolve, reject) => {
@@ -106,4 +137,9 @@ const requestWithLoading = (options) => {
 module.exports = {
   formatTime,
   requestWithLoading,
+  getWeixinID,
+  setWeixinID,
+  clearWeixinID,
+  isLoggedIn,
+  buildLoginUrl,
 }

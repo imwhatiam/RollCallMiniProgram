@@ -25,7 +25,8 @@ Page({
   handleActivityItemsInput(e) {
     const items = e.detail.value
       .split('\n')
-      .filter(item => item.trim());
+      .filter(item => item.trim())
+      .map(item => item.trim());
     this.setData({ activityItems: items });
   },
 
@@ -36,9 +37,11 @@ Page({
       return;
     }
 
+    // 字段名必须和详情页读写的一致（详情页用的是 completed），
+    // 之前这里写成 complete，导致新活动里所有条目都带着一个没人读的脏字段。
     const items = activityItems.map(itemName => ({
       itemName: itemName,
-      complete: false,
+      completed: false,
       deleted: false,
     }))
 
@@ -51,7 +54,8 @@ Page({
     activities.unshift(newActivity);
 
     wx.setStorageSync('activities', activities);
-    wx.navigateTo({
+    // 用 redirectTo 而不是 navigateTo：从详情页返回时不该再回到已提交的表单
+    wx.redirectTo({
       url: `/pages/offline/activity_detail/activity_detail?index=0`
     });
   },

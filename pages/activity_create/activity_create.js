@@ -1,5 +1,5 @@
 import { API } from '../../config';
-import { requestWithLoading } from '../../utils/utils';
+import { requestWithLoading, getWeixinID } from '../../utils/utils';
 
 Page({
 
@@ -89,7 +89,7 @@ Page({
         url: API.createNewActivity,
         method: 'POST',
         data: {
-          creator_weixin_id: wx.getStorageSync('weixinID'),
+          creator_weixin_id: getWeixinID(),
           activity_title: activityTitle,
           activity_items: activityItems,
         },

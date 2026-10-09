@@ -1,13 +1,14 @@
 import { API } from '../../config';
-import { requestWithLoading } from '../../utils/utils';
+import { requestWithLoading, getWeixinID, isLoggedIn, buildLoginUrl } from '../../utils/utils';
 
 Page({
 
   // Share to timeline
+  // 注意：onShareTimeline 只支持 title / query / imageUrl，不支持 path
   onShareTimeline: function () {
     return {
       title: this.data.title,
-      path: `/pages/activity_detail/activity_detail?activityID=${this.data.activityID}`,
+      query: `activityID=${this.data.activityID}`,
     };
   },
 
@@ -41,39 +42,40 @@ Page({
   // Page load lifecycle
   onLoad(options) {
     const activityID = options.activityID;
-    if (wx.getStorageSync('weixinID') === '') {
-      const redirect = `/pages/activity_detail/activity_detail?activityID=${activityID}`;
-      const encodedRedirect = encodeURIComponent(redirect);
-      wx.navigateTo({
-        url: `/pages/login/login?redirect=${encodedRedirect}`
+
+    if (!isLoggedIn()) {
+      wx.redirectTo({
+        url: buildLoginUrl(`/pages/activity_detail/activity_detail?activityID=${activityID}`),
       });
-    } else {
-      if (activityID) {
-        this.getActivityFromServer(parseInt(activityID));
-        this.setData({
-          activityID: activityID,
-          currentUserWeixinID: wx.getStorageSync('weixinID'),
-        });
-      } else {
-        wx.showToast({
-          title: `活动ID无效: ${activityID}`,
-          icon: 'none',
-          duration: 2000,
-        });
-      }
+      return;
     }
+
+    if (!activityID) {
+      wx.showToast({
+        title: `活动ID无效: ${activityID}`,
+        icon: 'none',
+        duration: 2000,
+      });
+      return;
+    }
+
+    this.setData({
+      activityID: activityID,
+      currentUserWeixinID: getWeixinID(),
+    });
+    this.getActivityFromServer(parseInt(activityID));
   },
 
   // Fetch activity data from server
   async getActivityFromServer(activityID) {
     try {
       const res = await requestWithLoading({
-        url: API.getActivity(activityID, wx.getStorageSync('weixinID')),
+        url: API.getActivity(activityID, getWeixinID()),
         method: 'GET',
       });
       console.log('getActivityFromServer success', res);
 
-      const user = res.data.white_list.find(item => item.weixin_id === wx.getStorageSync('weixinID'));
+      const user = res.data.white_list.find(item => item.weixin_id === getWeixinID());
       const permission = user ? user.permission : '';
 
       this.setData({
@@ -95,7 +97,7 @@ Page({
           duration: toastDuration
         });
         setTimeout(() => {
-          wx.navigateTo({ url: '/pages/index/index' });
+          wx.reLaunch({ url: '/pages/index/index' });
         }, toastDuration);
 
         return;
@@ -140,7 +142,7 @@ Page({
         url: API.updateActivity(activityID),
         method: 'PUT',
         data: {
-          weixin_id: wx.getStorageSync('weixinID'),
+          weixin_id: getWeixinID(),
           activity_title: title
         }
       });
@@ -173,7 +175,7 @@ Page({
         url: API.updateWhiteList(activityID),
         method: 'PUT',
         data: {
-          weixin_id: wx.getStorageSync('weixinID'),
+          weixin_id: getWeixinID(),
           white_list: {
             weixin_id: weixinID,
             permission: permission
@@ -259,7 +261,7 @@ Page({
         url: API.initActivityItems(activityID),
         method: 'PUT',
         data: {
-          weixin_id: wx.getStorageSync('weixinID')
+          weixin_id: getWeixinID()
         }
       });
       console.log('initActivityItems success', res);
@@ -285,7 +287,7 @@ Page({
         url: API.copyActivityToMy(activityID),
         method: 'POST',
         data: {
-          weixin_id: wx.getStorageSync('weixinID'),
+          weixin_id: getWeixinID(),
         }
       });
       console.log('copyActivityToMy success', res);
@@ -342,7 +344,7 @@ Page({
         url: API.updateActivityItem(activityID, itemID),
         method: 'PUT',
         data: {
-          weixin_id: wx.getStorageSync('weixinID'),
+          weixin_id: getWeixinID(),
           activity_item_status: itemStatus
         }
       });
@@ -380,7 +382,7 @@ Page({
         url: API.deleteActivityItem(activityID, itemID),
         method: 'DELETE',
         data: {
-          weixin_id: wx.getStorageSync('weixinID'),
+          weixin_id: getWeixinID(),
         }
       });
       console.log('deleteActivityItem success', res);
@@ -427,7 +429,7 @@ Page({
         url: API.addActivityItem(activityID),
         method: 'POST',
         data: {
-          weixin_id: wx.getStorageSync('weixinID'),
+          weixin_id: getWeixinID(),
           activity_item_name: newItemName
         }
       });

@@ -32,8 +32,15 @@ Page({
   },
 
   loadActivity(index) {
-    const activities = wx.getStorageSync('activities');
+    const activities = wx.getStorageSync('activities') || [];
     const activity = activities[index];
+
+    // 存储被清空或 index 越界时不要直接读属性崩掉
+    if (!activity) {
+      wx.hideLoading();
+      wx.showToast({ title: '活动不存在', icon: 'none' });
+      return;
+    }
 
     this.setData({
       index,

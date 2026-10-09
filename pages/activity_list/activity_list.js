@@ -1,4 +1,4 @@
-const { requestWithLoading } = require('../../utils/utils');
+const { requestWithLoading, getWeixinID, isLoggedIn, buildLoginUrl } = require('../../utils/utils');
 import { API } from '../../config';
 
 Page({
@@ -25,7 +25,14 @@ Page({
 
   // Page show lifecycle
   onShow() {
-    console.log(wx.getStorageSync('weixinID'));
+    // 没登录就直接拉列表会带着空 weixin_id 请求，后端只会回 400。
+    if (!isLoggedIn()) {
+      console.log('not logged in, redirect to login page');
+      wx.redirectTo({
+        url: buildLoginUrl('/pages/activity_list/activity_list'),
+      });
+      return;
+    }
     this.getActivitiesFromServer();
   },
 
@@ -33,7 +40,7 @@ Page({
   async getActivitiesFromServer() {
     try {
       const res = await requestWithLoading({
-        url: API.getActivities(wx.getStorageSync('weixinID')),
+        url: API.getActivities(getWeixinID()),
         method: 'GET',
       });
 
@@ -72,7 +79,7 @@ Page({
         url: API.copyActivityToMy(activityID),
         method: 'POST',
         data: {
-          weixin_id: wx.getStorageSync('weixinID'),
+          weixin_id: getWeixinID(),
         }
       });
       console.log('copyActivityToMy success', res);
@@ -122,7 +129,7 @@ Page({
         url: API.deleteActivity(activityID),
         method: 'DELETE',
         data: {
-          weixin_id: wx.getStorageSync('weixinID'),
+          weixin_id: getWeixinID(),
           source: source
         }
       });

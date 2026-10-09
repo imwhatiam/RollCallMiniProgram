@@ -1,3 +1,5 @@
+const { isLoggedIn } = require('../../utils/utils');
+
 Page({
 
   onShareTimeline: function () {
@@ -18,7 +20,7 @@ Page({
   onLoad() {
   },
   navigateToOnline() {
-    if (wx.getStorageSync('weixinID')) {
+    if (isLoggedIn()) {
       console.log('nav to online activity list')
       wx.navigateTo({
         url: `/pages/activity_list/activity_list`
